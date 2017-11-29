@@ -71,12 +71,7 @@ func main() {
 		encrypted: false,
 	}
 
-	// Build the keyring by loading the private key
-	if err := content.keyring(); err != nil {
-		fmt.Println(err)
-	}
-
-	// Decrypt the PGP Message
+	// Encrypt the PGP Message
 	if err := content.encrypt(); err != nil {
 		fmt.Println(err)
 	}
