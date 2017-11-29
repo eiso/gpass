@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/eiso/go-pass/gitops"
 	"golang.org/x/crypto/openpgp"
 	"golang.org/x/crypto/openpgp/armor"
 	"golang.org/x/crypto/openpgp/packet"
@@ -83,10 +84,12 @@ func main() {
 	fmt.Println(encryptedMessage)
 
 	// Write encrypted content to a file
-	if err := content.writeToFile("/tmp/msg.gpg"); err != nil {
+	if err := content.writeToFile("/home/mthek/temp/gopass/msg.gpg"); err != nil {
 		fmt.Println(err)
 	}
 
+	gitops.Init()
+	gitops.Commit("msg.gpg")
 }
 
 func loadFile(filename string) ([]byte, error) {
