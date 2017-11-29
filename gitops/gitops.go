@@ -9,32 +9,44 @@ import (
 	"time"
 
 	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/format/config"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
 
-var username string
-var home string
-var gitRepo string
+type repo struct {
+	path string
+	root *git.Repository
+}
 
 type identity struct {
 	name  string
 	email string
 }
 
+var home string
 var gitID identity
+var r repo
 
-// Init setups the git system config
+// Init setups the git system config & adds .gitignore
 func Init() error {
+
 	u, err := user.Current()
 	if err != nil {
 		return fmt.Errorf("User could not determined: %s", err)
 	}
-	home = path.Join("/home", u.Username)
-	// TODO: temporary
-	gitRepo = path.Join(home, "temp/gopass")
 
-	parseGitConfig()
+	// TODO: temporary
+	home = path.Join("/home", u.Username)
+	r.path = path.Join(home, "temp/gopass")
+
+	if err := parseGitConfig(); err != nil {
+		fmt.Println(err)
+	}
+
+	if err := r.load(); err != nil {
+		fmt.Println(err)
+	}
 
 	return nil
 }
@@ -80,14 +92,47 @@ func parseGitConfig() error {
 	return nil
 }
 
-// Commit creates a commit for the encrypted message file
-func Commit(filename string) error {
-	r, err := git.PlainOpen(gitRepo)
+func (r *repo) load() error {
+
+	s, err := git.PlainOpen(r.path)
 	if err != nil {
-		return fmt.Errorf(": %s", err)
+		return err
 	}
 
-	w, err := r.Worktree()
+	r.root = s
+	return nil
+}
+
+// Branch creates/switches to a new branch based on the filename of the msg
+func Branch(s string) error {
+
+	name := fmt.Sprintf("refs/heads/%s", s)
+
+	w, err := r.root.Worktree()
+	if err != nil {
+		return fmt.Errorf("Unable to load the work tree: %s", err)
+	}
+
+	o := &git.CheckoutOptions{}
+
+	if err = o.Validate(); err != nil {
+		return err
+	}
+
+	o.Branch = plumbing.ReferenceName(name)
+	o.Create = true
+
+	if err = w.Checkout(o); err != nil {
+		return fmt.Errorf("Unable to create a new branch: %s", err)
+	}
+
+	return nil
+}
+
+// CommitFile adds the file & commits it
+func CommitFile(filename string, msg string) error {
+
+	w, err := r.root.Worktree()
 	if err != nil {
 		return fmt.Errorf("Unable to load the work tree: %s", err)
 	}
@@ -96,8 +141,6 @@ func Commit(filename string) error {
 	if err != nil {
 		return fmt.Errorf("Unable to git add the file: %s", err)
 	}
-
-	msg := fmt.Sprintf("Add: %s", filename)
 
 	_, err = w.Commit(msg, &git.CommitOptions{
 		Author: &object.Signature{

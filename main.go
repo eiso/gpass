@@ -63,12 +63,9 @@ func main() {
 		fmt.Println(err)
 	}
 
-	decryptedMessage := string(content.message)
-
-	fmt.Println(decryptedMessage)
-
 	// Encryption
 
+	// Set the content for the message
 	content = pgp{
 		message:   content.message,
 		encrypted: false,
@@ -79,18 +76,26 @@ func main() {
 		fmt.Println(err)
 	}
 
-	encryptedMessage := string(content.message)
+	// Initialize Git identity
+	if err := gitops.Init(); err != nil {
+		fmt.Println(err)
+	}
 
-	fmt.Println(encryptedMessage)
+	// Switch to a branch
+	if err := gitops.Branch("msg"); err != nil {
+		fmt.Println(err)
+	}
 
 	// TODO: Write encrypted content to a file
 	if err := content.writeToFile("/home/mthek/temp/gopass/msg.gpg"); err != nil {
 		fmt.Println(err)
 	}
 
-	// Initialize git identity & commit the msg.gpg file
-	gitops.Init()
-	gitops.Commit("msg.gpg")
+	// Commit the msg.gpg file
+	msg := fmt.Sprintf("Add: %s", "msg")
+	if err := gitops.CommitFile("msg.gpg", msg); err != nil {
+		fmt.Println(err)
+	}
 }
 
 func loadFile(filename string) ([]byte, error) {
