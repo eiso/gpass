@@ -35,11 +35,13 @@ func main() {
 	f1, err := loadFile(*keyPtr)
 	if err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	f2, err := loadFile(*msgPtr)
 	if err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	// Decryption
@@ -80,6 +82,11 @@ func main() {
 
 	fmt.Println(encryptedMessage)
 
+	// Write encrypted content to a file
+	if err := content.writeToFile("/tmp/msg.gpg"); err != nil {
+		fmt.Println(err)
+	}
+
 }
 
 func loadFile(filename string) ([]byte, error) {
@@ -89,6 +96,22 @@ func loadFile(filename string) ([]byte, error) {
 	}
 
 	return f, err
+}
+
+func (f pgp) writeToFile(path string) error {
+	if len(f.message) == 0 {
+		return fmt.Errorf("The message content has not been loaded")
+	}
+
+	if !f.encrypted {
+		return fmt.Errorf("Not allowed to write unencrypted content to a file")
+	}
+
+	if err := ioutil.WriteFile(path, f.message, 0600); err != nil {
+		return fmt.Errorf("Unable to write to file: %s", err)
+	}
+
+	return nil
 }
 
 func (f pgp) keyring() error {
