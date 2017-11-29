@@ -83,11 +83,12 @@ func main() {
 
 	fmt.Println(encryptedMessage)
 
-	// Write encrypted content to a file
+	// TODO: Write encrypted content to a file
 	if err := content.writeToFile("/home/mthek/temp/gopass/msg.gpg"); err != nil {
 		fmt.Println(err)
 	}
 
+	// Initialize git identity & commit the msg.gpg file
 	gitops.Init()
 	gitops.Commit("msg.gpg")
 }

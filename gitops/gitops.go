@@ -31,7 +31,7 @@ func Init() error {
 		return fmt.Errorf("User could not determined: %s", err)
 	}
 	home = path.Join("/home", u.Username)
-	// TO-DO: temporary
+	// TODO: temporary
 	gitRepo = path.Join(home, "temp/gopass")
 
 	parseGitConfig()
