@@ -16,12 +16,12 @@ type pgp struct {
 	privateKey []byte
 	passphrase string
 	message    []byte
+	encrypted  bool
 }
 
 var entityList openpgp.EntityList
 
 func main() {
-
 	keyPtr := flag.String("key", "", "path to your private key")
 	passPtr := flag.String("pass", "", "password to unlock the private key")
 	msgPtr := flag.String("msg", "", "path to the encrypted message")
@@ -42,9 +42,12 @@ func main() {
 		fmt.Println(err)
 	}
 
+	// Decryption
+
 	content := pgp{privateKey: f1,
 		passphrase: *passPtr,
 		message:    f2,
+		encrypted:  true,
 	}
 
 	// Build the keyring by loading the private key
@@ -61,10 +64,33 @@ func main() {
 	decryptedMessage := string(msg)
 
 	fmt.Println(decryptedMessage)
+
+	// Encryption
+
+	contentDecrypted := pgp{
+		privateKey: f1,
+		passphrase: *passPtr,
+		message:    msg,
+		encrypted:  false,
+	}
+
+	// Build the keyring by loading the private key
+	if err := contentDecrypted.keyring(); err != nil {
+		fmt.Println(err)
+	}
+
+	// Decrypt the PGP Message
+	msgEnc, err := contentDecrypted.encrypt()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	encryptedMessage := string(msgEnc)
+
+	fmt.Println(encryptedMessage)
 }
 
 func loadFile(filename string) ([]byte, error) {
-
 	f, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("Encrypted file could not be read: %s", err)
@@ -74,7 +100,6 @@ func loadFile(filename string) ([]byte, error) {
 }
 
 func (f pgp) keyring() error {
-
 	passphraseByte := []byte(f.passphrase)
 
 	s := bytes.NewReader([]byte(f.privateKey))
@@ -107,6 +132,9 @@ func (f pgp) keyring() error {
 }
 
 func (f pgp) decrypt() ([]byte, error) {
+	if !f.encrypted {
+		return nil, fmt.Errorf("The message is not encrypted")
+	}
 
 	block, err := armor.Decode(bytes.NewReader([]byte(f.message)))
 	if err != nil {
@@ -129,4 +157,38 @@ func (f pgp) decrypt() ([]byte, error) {
 	}
 
 	return message, nil
+}
+
+func (f pgp) encrypt() ([]byte, error) {
+	var w bytes.Buffer
+
+	b, err := armor.Encode(&w, "PGP MESSAGE", nil)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to armor encode")
+	}
+
+	e, err := openpgp.Encrypt(b, entityList, nil, nil, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to load keyring for encryption: %s", err)
+	}
+
+	v, err := e.Write(f.message)
+	if err != nil {
+		return nil, fmt.Errorf("%s, ints buffered: %v", err, v)
+	}
+
+	if err := e.Close(); err != nil {
+		return nil, fmt.Errorf("%s", err)
+	}
+
+	if err := b.Close(); err != nil {
+		return nil, fmt.Errorf("%s", err)
+	}
+
+	encryptedMessage, err := ioutil.ReadAll(&w)
+	if err != nil {
+		return nil, fmt.Errorf("%s", err)
+	}
+
+	return encryptedMessage, nil
 }
