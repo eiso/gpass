@@ -17,6 +17,7 @@ Commands under development:
 [] grep
 [] help
 [] version
+[] init
 
 gpass is inspired by [pass](https://www.passwordstore.org/), the Unix password manager, by [ZX2C4](https://www.zx2c4.com/). 
 

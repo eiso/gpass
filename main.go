@@ -35,7 +35,7 @@ func main() {
 	}
 
 	var r git.Repository
-	var content e.PGP
+	var c e.PGP
 
 	r.Path = path.Join(git.UserID.HomeFolder, "temp/gopass/")
 
@@ -43,24 +43,24 @@ func main() {
 		fmt.Println(err)
 	}
 
-	content = e.PGP{PrivateKey: f1,
+	c = e.PGP{PrivateKey: f1,
 		Passphrase: *passPtr,
 		Message:    f2,
 		Encrypted:  true,
 	}
 
-	if err := content.Keyring(); err != nil {
+	if err := c.Keyring(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	if err := content.Decrypt(); err != nil {
+	if err := c.Decrypt(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 
 	}
 
-	if err := content.Encrypt(); err != nil {
+	if err := c.Encrypt(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
@@ -70,7 +70,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := content.WriteFile(r.Path, "msg.gpg"); err != nil {
+	if err := c.WriteFile(r.Path, "msg.gpg"); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
@@ -86,12 +86,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := content.WriteFile(r.Path, "msg2.gpg"); err != nil {
+	if err := c.WriteFile(r.Path, "msg2.gpg"); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	if err := content.WriteFile(r.Path, "msg2.gpg"); err != nil {
+	if err := c.WriteFile(r.Path, "msg2.gpg"); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
@@ -107,7 +107,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := content.WriteFile(r.Path, "msg1-2.gpg"); err != nil {
+	if err := c.WriteFile(r.Path, "msg1-2.gpg"); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
