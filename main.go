@@ -82,11 +82,12 @@ func main() {
 	}
 
 	// Switch to a branch
-	if err := gitops.Branch("msg"); err != nil {
+	if err := gitops.Branch("msg", true); err != nil {
 		fmt.Println(err)
 	}
 
-	// TODO: Write encrypted content to a file
+	// TODO
+	// Write encrypted content to a file
 	if err := content.writeToFile("/home/mthek/temp/gopass/msg.gpg"); err != nil {
 		fmt.Println(err)
 	}
@@ -96,6 +97,33 @@ func main() {
 	if err := gitops.CommitFile("msg.gpg", msg); err != nil {
 		fmt.Println(err)
 	}
+
+	if err := gitops.Branch("msg2", true); err != nil {
+		fmt.Println(err)
+	}
+
+	if err := content.writeToFile("/home/mthek/temp/gopass/msg2.gpg"); err != nil {
+		fmt.Println(err)
+	}
+
+	msg = fmt.Sprintf("Add: %s", "msg2")
+	if err = gitops.CommitFile("msg2.gpg", msg); err != nil {
+		fmt.Println(err)
+	}
+
+	if err := gitops.Branch("msg", false); err != nil {
+		fmt.Println(err)
+	}
+
+	if err := content.writeToFile("/home/mthek/temp/gopass/msg1-2.gpg"); err != nil {
+		fmt.Println(err)
+	}
+
+	msg = fmt.Sprintf("Add: %s", "msg1-2")
+	if err = gitops.CommitFile("msg1-2.gpg", msg); err != nil {
+		fmt.Println(err)
+	}
+
 }
 
 func loadFile(filename string) ([]byte, error) {

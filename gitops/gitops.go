@@ -22,9 +22,9 @@ type repo struct {
 type identity struct {
 	name  string
 	email string
+	home  string
 }
 
-var home string
 var gitID identity
 var r repo
 
@@ -37,8 +37,8 @@ func Init() error {
 	}
 
 	// TODO: temporary
-	home = path.Join("/home", u.Username)
-	r.path = path.Join(home, "temp/gopass")
+	gitID.home = path.Join("/home", u.Username)
+	r.path = path.Join(gitID.home, "temp/gopass")
 
 	if err := parseGitConfig(); err != nil {
 		fmt.Println(err)
@@ -56,7 +56,7 @@ func parseGitConfig() error {
 	var name string
 	var email string
 
-	file := path.Join(home, p)
+	file := path.Join(gitID.home, p)
 
 	f, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -104,7 +104,7 @@ func (r *repo) load() error {
 }
 
 // Branch creates/switches to a new branch based on the filename of the msg
-func Branch(s string) error {
+func Branch(s string, create bool) error {
 
 	name := fmt.Sprintf("refs/heads/%s", s)
 
@@ -120,7 +120,7 @@ func Branch(s string) error {
 	}
 
 	o.Branch = plumbing.ReferenceName(name)
-	o.Create = true
+	o.Create = create
 
 	if err = w.Checkout(o); err != nil {
 		return fmt.Errorf("Unable to create a new branch: %s", err)
