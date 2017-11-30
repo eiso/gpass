@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"path"
 
 	"golang.org/x/crypto/openpgp"
 	"golang.org/x/crypto/openpgp/armor"
 	"golang.org/x/crypto/openpgp/packet"
 )
 
+// PGP holds the private key/pass and one message (may be encrypted/decrypted) at a time
 type PGP struct {
 	PrivateKey []byte
 	Passphrase string
@@ -19,8 +21,8 @@ type PGP struct {
 
 var entityList openpgp.EntityList
 
-// WriteToFile writes an encrypted message
-func (f *PGP) WriteToFile(path string) error {
+// WriteFile writes the encrypted message to a file
+func (f *PGP) WriteFile(repoPath string, filename string) error {
 	if len(f.Message) == 0 {
 		return fmt.Errorf("The message content has not been loaded")
 	}
@@ -29,13 +31,16 @@ func (f *PGP) WriteToFile(path string) error {
 		return fmt.Errorf("Not allowed to write unencrypted content to a file")
 	}
 
-	if err := ioutil.WriteFile(path, f.Message, 0600); err != nil {
+	p := path.Join(repoPath, filename)
+
+	if err := ioutil.WriteFile(p, f.Message, 0600); err != nil {
 		return fmt.Errorf("Unable to write to file: %s", err)
 	}
 
 	return nil
 }
 
+//Keyring builds a pgp keyring based upon the users' private key
 func (f *PGP) Keyring() error {
 	passphraseByte := []byte(f.Passphrase)
 
@@ -68,6 +73,7 @@ func (f *PGP) Keyring() error {
 	return nil
 }
 
+// Decrypt a message
 func (f *PGP) Decrypt() error {
 	if !f.Encrypted {
 		return fmt.Errorf("The message is not encrypted")
@@ -97,6 +103,7 @@ func (f *PGP) Decrypt() error {
 	return nil
 }
 
+// Encrypt a message
 func (f *PGP) Encrypt() error {
 	if f.Encrypted {
 		return fmt.Errorf("The message is encrypted already")

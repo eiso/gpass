@@ -15,16 +15,18 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
 
+// Repository holds the repository meta data
 type Repository struct {
-	path string
-	root *git.Repository
+	Path  string
+	root  *git.Repository
+	Files []string
 }
 
 // Identity is the relevant user information
 type Identity struct {
-	Name  string
-	Email string
-	Home  string
+	Name       string
+	Email      string
+	HomeFolder string
 }
 
 // UserID holds the users information
@@ -33,34 +35,23 @@ var UserID Identity
 func init() {
 
 	u, _ := user.Current()
-	UserID.Home = path.Join("/home", u.Username)
+	UserID.HomeFolder = path.Join("/home", u.Username)
 
-	//TODO is this a good/bad design practice in Go
-	err := ParseGitConfig()
+	// TODO: having an os.Exit(1) inside a package, is it considered bad?
+	err := UserID.Load()
 	if err != nil {
-		fmt.Println("Unable to find your systems .gitconfig file")
+		fmt.Println(err)
 		os.Exit(1)
 	}
 }
 
-func (r *Repository) Load(path string) error {
-
-	s, err := git.PlainOpen(path)
-	if err != nil {
-		return err
-	}
-
-	r.root = s
-	return nil
-}
-
-// ParseGitConfig parses the users git config file
-func ParseGitConfig() error {
+// Load parses the users git config file into Identity
+func (u *Identity) Load() error {
 	const p string = ".gitconfig"
 	var name string
 	var email string
 
-	file := path.Join(UserID.Home, p)
+	file := path.Join(u.HomeFolder, p)
 
 	f, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -90,9 +81,21 @@ func ParseGitConfig() error {
 		}
 	}
 
-	UserID.Name = name
-	UserID.Email = email
+	u.Name = name
+	u.Email = email
 
+	return nil
+}
+
+// Load a git repository from disk
+func (r *Repository) Load() error {
+
+	s, err := git.PlainOpen(r.Path)
+	if err != nil {
+		return err
+	}
+
+	r.root = s
 	return nil
 }
 

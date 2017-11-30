@@ -6,9 +6,9 @@ import (
 	"os"
 	"path"
 
-	e "github.com/eiso/go-pass/encrypt"
-	"github.com/eiso/go-pass/git"
-	"github.com/eiso/go-pass/utils"
+	e "github.com/eiso/gpass/encrypt"
+	"github.com/eiso/gpass/git"
+	"github.com/eiso/gpass/utils"
 )
 
 func main() {
@@ -37,13 +37,11 @@ func main() {
 	var r git.Repository
 	var content e.PGP
 
-	folder := path.Join(git.UserID.Home, "temp/gopass")
+	r.Path = path.Join(git.UserID.HomeFolder, "temp/gopass/")
 
-	if err := r.Load(folder); err != nil {
+	if err := r.Load(); err != nil {
 		fmt.Println(err)
 	}
-
-	// Decryption
 
 	content = e.PGP{PrivateKey: f1,
 		Passphrase: *passPtr,
@@ -53,54 +51,71 @@ func main() {
 
 	if err := content.Keyring(); err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	if err := content.Decrypt(); err != nil {
 		fmt.Println(err)
+		os.Exit(1)
+
 	}
 
 	if err := content.Encrypt(); err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	if err := r.Branch("msg", true); err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 
-	// TODO
-	if err := content.WriteToFile("/home/mthek/temp/gopass/msg.gpg"); err != nil {
+	if err := content.WriteFile(r.Path, "msg.gpg"); err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	msg := fmt.Sprintf("Add: %s", "msg")
 	if err := r.CommitFile("msg.gpg", msg); err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	if err := r.Branch("msg2", true); err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 
-	if err := content.WriteToFile("/home/mthek/temp/gopass/msg2.gpg"); err != nil {
+	if err := content.WriteFile(r.Path, "msg2.gpg"); err != nil {
 		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	if err := content.WriteFile(r.Path, "msg2.gpg"); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	msg = fmt.Sprintf("Add: %s", "msg2")
 	if err = r.CommitFile("msg2.gpg", msg); err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	if err := r.Branch("msg", false); err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 
-	if err := content.WriteToFile("/home/mthek/temp/gopass/msg1-2.gpg"); err != nil {
+	if err := content.WriteFile(r.Path, "msg1-2.gpg"); err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	msg = fmt.Sprintf("Add: %s", "msg1-2")
 	if err = r.CommitFile("msg1-2.gpg", msg); err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 
 }
