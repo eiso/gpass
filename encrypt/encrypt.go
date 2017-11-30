@@ -22,7 +22,7 @@ type PGP struct {
 
 var entityList openpgp.EntityList
 
-// WriteFile writes the encrypted message to a new file
+// WriteFile writes the encrypted message to a new file, fails on existing files
 func (f *PGP) WriteFile(repoPath string, filename string) error {
 	if len(f.Message) == 0 {
 		return fmt.Errorf("The message content has not been loaded")
@@ -64,7 +64,7 @@ func (f *PGP) Keyring() error {
 	s := bytes.NewReader([]byte(f.PrivateKey))
 	block, err := armor.Decode(s)
 	if err != nil {
-		return fmt.Errorf("Unable to armor decode: %s", err)
+		return fmt.Errorf("Not an armor encoded PGP private key: %s", err)
 	} else if block.Type != openpgp.PrivateKeyType {
 		return fmt.Errorf("Not a OpenPGP private key: %s", err)
 	}
