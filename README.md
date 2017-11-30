@@ -21,6 +21,6 @@ Commands under development:
 
 gpass is inspired by [pass](https://www.passwordstore.org/), the Unix password manager, by [ZX2C4](https://www.zx2c4.com/). 
 
-This project uses [go-git](https://github.com/src-d/go-git) for the git operations and [openpgp](https://godoc.org/golang.org/x/crypto/openpgp) for the encryption layer. 
+This project uses [go-git](https://github.com/src-d/go-git) for the git operations and [openpgp](https://godoc.org/golang.org/x/crypto/openpgp) for encryption. 
 
 This tool is currently under development. 
