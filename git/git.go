@@ -1,9 +1,10 @@
-package gitops
+package git
 
 import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"os/user"
 	"path"
 	"time"
@@ -14,49 +15,52 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
 
-type repo struct {
+type Repository struct {
 	path string
 	root *git.Repository
 }
 
-type identity struct {
-	name  string
-	email string
-	home  string
+// Identity is the relevant user information
+type Identity struct {
+	Name  string
+	Email string
+	Home  string
 }
 
-var gitID identity
-var r repo
+// UserID holds the users information
+var UserID Identity
 
-// Init setups the git system config & adds .gitignore
-func Init() error {
+func init() {
 
-	u, err := user.Current()
+	u, _ := user.Current()
+	UserID.Home = path.Join("/home", u.Username)
+
+	//TODO is this a good/bad design practice in Go
+	err := ParseGitConfig()
 	if err != nil {
-		return fmt.Errorf("User could not determined: %s", err)
+		fmt.Println("Unable to find your systems .gitconfig file")
+		os.Exit(1)
+	}
+}
+
+func (r *Repository) Load(path string) error {
+
+	s, err := git.PlainOpen(path)
+	if err != nil {
+		return err
 	}
 
-	// TODO: temporary
-	gitID.home = path.Join("/home", u.Username)
-	r.path = path.Join(gitID.home, "temp/gopass")
-
-	if err := parseGitConfig(); err != nil {
-		fmt.Println(err)
-	}
-
-	if err := r.load(); err != nil {
-		fmt.Println(err)
-	}
-
+	r.root = s
 	return nil
 }
 
-func parseGitConfig() error {
+// ParseGitConfig parses the users git config file
+func ParseGitConfig() error {
 	const p string = ".gitconfig"
 	var name string
 	var email string
 
-	file := path.Join(gitID.home, p)
+	file := path.Join(UserID.Home, p)
 
 	f, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -86,25 +90,14 @@ func parseGitConfig() error {
 		}
 	}
 
-	gitID.name = name
-	gitID.email = email
+	UserID.Name = name
+	UserID.Email = email
 
-	return nil
-}
-
-func (r *repo) load() error {
-
-	s, err := git.PlainOpen(r.path)
-	if err != nil {
-		return err
-	}
-
-	r.root = s
 	return nil
 }
 
 // Branch creates/switches to a new branch based on the filename of the msg
-func Branch(s string, create bool) error {
+func (r *Repository) Branch(s string, create bool) error {
 
 	name := fmt.Sprintf("refs/heads/%s", s)
 
@@ -130,7 +123,7 @@ func Branch(s string, create bool) error {
 }
 
 // CommitFile adds the file & commits it
-func CommitFile(filename string, msg string) error {
+func (r *Repository) CommitFile(filename string, msg string) error {
 
 	w, err := r.root.Worktree()
 	if err != nil {
@@ -144,8 +137,8 @@ func CommitFile(filename string, msg string) error {
 
 	_, err = w.Commit(msg, &git.CommitOptions{
 		Author: &object.Signature{
-			Name:  gitID.name,
-			Email: gitID.email,
+			Name:  UserID.Name,
+			Email: UserID.Email,
 			When:  time.Now(),
 		},
 	})
