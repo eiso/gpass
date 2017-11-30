@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path"
 
 	"golang.org/x/crypto/openpgp"
@@ -21,7 +22,7 @@ type PGP struct {
 
 var entityList openpgp.EntityList
 
-// WriteFile writes the encrypted message to a file
+// WriteFile writes the encrypted message to a new file
 func (f *PGP) WriteFile(repoPath string, filename string) error {
 	if len(f.Message) == 0 {
 		return fmt.Errorf("The message content has not been loaded")
@@ -33,7 +34,23 @@ func (f *PGP) WriteFile(repoPath string, filename string) error {
 
 	p := path.Join(repoPath, filename)
 
-	if err := ioutil.WriteFile(p, f.Message, 0600); err != nil {
+	o, err := os.Open(p)
+	if err == nil {
+		o.Close()
+		return fmt.Errorf("File already exists")
+	}
+	o.Close()
+
+	d, err := os.Create(p)
+	if err != nil {
+		return fmt.Errorf("Unable to create the file: %s", err)
+	}
+
+	if err := d.Chmod(os.FileMode(0600)); err != nil {
+		return fmt.Errorf("Unable to change permissions on file to 0600: %s", err)
+	}
+
+	if _, err := d.Write(f.Message); err != nil {
 		return fmt.Errorf("Unable to write to file: %s", err)
 	}
 

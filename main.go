@@ -91,11 +91,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := c.WriteFile(r.Path, "msg2.gpg"); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
 	msg = fmt.Sprintf("Add: %s", "msg2")
 	if err = r.CommitFile("msg2.gpg", msg); err != nil {
 		fmt.Println(err)
