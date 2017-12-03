@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"os/user"
 	"path"
 	"time"
 
+	homedir "github.com/mitchellh/go-homedir"
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/format/config"
@@ -22,31 +21,32 @@ type Repository struct {
 	Files []string
 }
 
-// Identity is the relevant user information
-type Identity struct {
+// User is the relevant user information
+type User struct {
 	Name       string
 	Email      string
 	HomeFolder string
 }
 
-// UserID holds the users information
-var UserID Identity
+// Init populates the User type with information parsed from the system
+func (u *User) Init() error {
 
-func init() {
-
-	u, _ := user.Current()
-	UserID.HomeFolder = path.Join("/home", u.Username)
-
-	// TODO: having an os.Exit(1) inside a package, is it considered bad?
-	err := UserID.Load()
+	folder, err := homedir.Dir()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
+	u.HomeFolder = folder
+
+	err = u.load()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-// Load parses the users git config file into Identity
-func (u *Identity) Load() error {
+// Load parses the users git config file into User
+func (u *User) load() error {
 	const p string = ".gitconfig"
 	var name string
 	var email string
@@ -126,7 +126,7 @@ func (r *Repository) Branch(s string, create bool) error {
 }
 
 // CommitFile adds the file & commits it
-func (r *Repository) CommitFile(filename string, msg string) error {
+func (r *Repository) CommitFile(u *User, filename string, msg string) error {
 
 	w, err := r.root.Worktree()
 	if err != nil {
@@ -140,8 +140,8 @@ func (r *Repository) CommitFile(filename string, msg string) error {
 
 	_, err = w.Commit(msg, &git.CommitOptions{
 		Author: &object.Signature{
-			Name:  UserID.Name,
-			Email: UserID.Email,
+			Name:  u.Name,
+			Email: u.Email,
 			When:  time.Now(),
 		},
 	})

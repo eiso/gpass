@@ -37,7 +37,13 @@ func main() {
 	var r git.Repository
 	var c e.PGP
 
-	r.Path = path.Join(git.UserID.HomeFolder, "temp/gopass/")
+	u := new(git.User)
+	if err = u.Init(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	r.Path = path.Join(u.HomeFolder, "temp/gopass/")
 
 	if err := r.Load(); err != nil {
 		fmt.Println(err)
@@ -76,7 +82,7 @@ func main() {
 	}
 
 	msg := fmt.Sprintf("Add: %s", "msg")
-	if err := r.CommitFile("msg.gpg", msg); err != nil {
+	if err := r.CommitFile(u, "msg.gpg", msg); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
@@ -92,7 +98,7 @@ func main() {
 	}
 
 	msg = fmt.Sprintf("Add: %s", "msg2")
-	if err = r.CommitFile("msg2.gpg", msg); err != nil {
+	if err = r.CommitFile(u, "msg2.gpg", msg); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
@@ -108,7 +114,7 @@ func main() {
 	}
 
 	msg = fmt.Sprintf("Add: %s", "msg1-2")
-	if err = r.CommitFile("msg1-2.gpg", msg); err != nil {
+	if err = r.CommitFile(u, "msg1-2.gpg", msg); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
