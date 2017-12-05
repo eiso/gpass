@@ -17,7 +17,6 @@ import (
 // PGP holds the private key/pass and one message (may be encrypted/decrypted) at a time
 type PGP struct {
 	PrivateKey []byte
-	Passphrase openpgp.PromptFunction
 	Message    []byte
 	Encrypted  bool
 }
@@ -30,7 +29,6 @@ func NewPGP(k []byte, m []byte, e bool) *PGP {
 	r.PrivateKey = k
 	r.Message = m
 	r.Encrypted = e
-	r.Passphrase = Prompt(r)
 
 	return r
 }
@@ -43,37 +41,6 @@ func shellPrompt() []byte {
 	}
 
 	return passphraseByte
-}
-
-// Prompt function for openpgp
-func Prompt(p *PGP) openpgp.PromptFunction {
-
-	f := func(keys []openpgp.Key, symmetric bool) (pass []byte, err error) {
-		a := 0
-		var f2 func(keys []openpgp.Key, symmetric bool, n int) (pass []byte, err error)
-
-		f2 = func(keys []openpgp.Key, symmetric bool, n int) (pass []byte, err error) {
-
-			for _, k := range keys {
-				passphrase := shellPrompt()
-
-				if err := k.PrivateKey.Decrypt(passphrase); err != nil {
-					continue
-				} else {
-					return passphrase, nil
-				}
-			}
-
-			if n <= a {
-				return nil, err
-			}
-
-			return f2(keys, symmetric, n-1)
-		}
-		return f2(keys, symmetric, 3)
-	}
-
-	return openpgp.PromptFunction(f)
 }
 
 // WriteFile writes the encrypted message to a new file, fails on existing files
@@ -162,7 +129,7 @@ func (f *PGP) Decrypt() error {
 		return fmt.Errorf("This file is not a PGP message: %s", err)
 	}
 
-	md, err := openpgp.ReadMessage(block.Body, entityList, f.Passphrase, nil)
+	md, err := openpgp.ReadMessage(block.Body, entityList, nil, nil)
 	if err != nil {
 		return fmt.Errorf("Unable to decrypt the message: %s", err)
 	}
