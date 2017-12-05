@@ -33,6 +33,8 @@ func init() {
 	store.Load("config.json", &Cfg)
 
 	rootCmd.AddCommand(NewInitCmd().Cmd())
+	rootCmd.AddCommand(NewInsertCmd().Cmd())
+	rootCmd.AddCommand(NewShowCmd().Cmd())
 }
 
 // Execute the cobra commands
