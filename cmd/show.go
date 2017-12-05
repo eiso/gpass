@@ -40,6 +40,14 @@ func (c *ShowCmd) Execute(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if err := r.Load(); err != nil {
+		return err
+	}
+
+	if err := r.Branch(arg, false); err != nil {
+		return err
+	}
+
 	f, err := utils.LoadFile(file)
 	if err != nil {
 		return err
@@ -49,14 +57,6 @@ func (c *ShowCmd) Execute(cmd *cobra.Command, args []string) error {
 
 	if err := p.Keyring(3); err != nil {
 		return fmt.Errorf("[exit] only 3 passphrase attempts allowed")
-	}
-
-	if err := r.Load(); err != nil {
-		return err
-	}
-
-	if err := r.Branch(arg, false); err != nil {
-		return err
 	}
 
 	if err := p.Decrypt(); err != nil {
