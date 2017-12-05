@@ -6,6 +6,9 @@ gpass creates a branch for each of the accounts you add, allowing you to have ve
 
 Commands under development: 
 
+- [x] help
+- [x] version
+- [x] init
 - [ ] insert
 - [ ] show
 - [ ] list
@@ -15,9 +18,7 @@ Commands under development:
 - [ ] edit
 - [ ] generate
 - [ ] grep
-- [ ] help
-- [ ] version
-- [ ] init
+
 
 gpass is inspired by [pass](https://www.passwordstore.org/), the Unix password manager, by [ZX2C4](https://www.zx2c4.com/). 
 

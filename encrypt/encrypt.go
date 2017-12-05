@@ -6,21 +6,79 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"syscall"
 
 	"golang.org/x/crypto/openpgp"
 	"golang.org/x/crypto/openpgp/armor"
 	"golang.org/x/crypto/openpgp/packet"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 // PGP holds the private key/pass and one message (may be encrypted/decrypted) at a time
 type PGP struct {
 	PrivateKey []byte
-	Passphrase string
+	Passphrase openpgp.PromptFunction
 	Message    []byte
 	Encrypted  bool
 }
 
 var entityList openpgp.EntityList
+
+func NewPGP(k []byte, p openpgp.PromptFunction, m []byte, e bool) *PGP {
+
+	r := new(PGP)
+	r.PrivateKey = k
+	r.Message = m
+	r.Encrypted = e
+
+	if p != nil {
+		r.Passphrase = p
+	} else {
+		r.Passphrase = passPrompt(r)
+	}
+
+	return r
+}
+
+func shellPrompt() []byte {
+	fmt.Print("Enter passphrase: ")
+	passphraseByte, err := terminal.ReadPassword(int(syscall.Stdin))
+	if err == nil {
+		fmt.Println("")
+	}
+
+	return passphraseByte
+}
+
+func passPrompt(p *PGP) openpgp.PromptFunction {
+
+	f := func(keys []openpgp.Key, symmetric bool) (pass []byte, err error) {
+		a := 0
+		var f2 func(keys []openpgp.Key, symmetric bool, n int) (pass []byte, err error)
+
+		f2 = func(keys []openpgp.Key, symmetric bool, n int) (pass []byte, err error) {
+
+			for _, k := range keys {
+				passphrase := shellPrompt()
+
+				if err := k.PrivateKey.Decrypt(passphrase); err != nil {
+					continue
+				} else {
+					return passphrase, nil
+				}
+			}
+
+			if n <= a {
+				return nil, err
+			}
+
+			return f2(keys, symmetric, n-1)
+		}
+		return f2(keys, symmetric, 3)
+	}
+
+	return openpgp.PromptFunction(f)
+}
 
 // WriteFile writes the encrypted message to a new file, fails on existing files
 func (f *PGP) WriteFile(repoPath string, filename string) error {
@@ -58,8 +116,8 @@ func (f *PGP) WriteFile(repoPath string, filename string) error {
 }
 
 //Keyring builds a pgp keyring based upon the users' private key
-func (f *PGP) Keyring() error {
-	passphraseByte := []byte(f.Passphrase)
+func (f *PGP) Keyring(attempts int) error {
+	passphraseByte := shellPrompt()
 
 	s := bytes.NewReader([]byte(f.PrivateKey))
 	block, err := armor.Decode(s)
@@ -77,6 +135,10 @@ func (f *PGP) Keyring() error {
 	if entity.PrivateKey != nil && entity.PrivateKey.Encrypted {
 		err := entity.PrivateKey.Decrypt(passphraseByte)
 		if err != nil {
+			if attempts > 1 {
+				fmt.Println("Sorry, try again.")
+				f.Keyring(attempts - 1)
+			}
 			return fmt.Errorf("Failed to decrypt main private key: %s", err)
 		}
 	}
@@ -104,7 +166,7 @@ func (f *PGP) Decrypt() error {
 		return fmt.Errorf("This file is not a PGP message: %s", err)
 	}
 
-	md, err := openpgp.ReadMessage(block.Body, entityList, nil, nil)
+	md, err := openpgp.ReadMessage(block.Body, entityList, f.Passphrase, nil)
 	if err != nil {
 		return fmt.Errorf("Unable to decrypt the message: %s", err)
 	}
