@@ -16,6 +16,7 @@ import (
 
 // PGP holds the private key/pass and one message (may be encrypted/decrypted) at a time
 type PGP struct {
+	PublicKey  []byte
 	PrivateKey []byte
 	Message    []byte
 	Encrypted  bool
@@ -26,11 +27,27 @@ var entityList openpgp.EntityList
 func NewPGP(k []byte, m []byte, e bool) *PGP {
 
 	r := new(PGP)
+
 	r.PrivateKey = k
 	r.Message = m
 	r.Encrypted = e
 
 	return r
+}
+
+func (f *PGP) AddPublicKey() error {
+	b := bytes.NewBuffer(nil)
+
+	w, _ := armor.Encode(b, openpgp.PublicKeyType, nil)
+	err := entityList[0].Serialize(w)
+	if err != nil {
+		return err
+	}
+	w.Close()
+
+	f.PublicKey = b.Bytes()
+
+	return nil
 }
 
 func shellPrompt() []byte {
@@ -44,6 +61,7 @@ func shellPrompt() []byte {
 }
 
 // WriteFile writes the encrypted message to a new file, fails on existing files
+// TODO, allow folders to be created e.g. google.com/user@gmail.com
 func (f *PGP) WriteFile(repoPath string, filename string) error {
 	if len(f.Message) == 0 {
 		return fmt.Errorf("The message content has not been loaded")
@@ -107,7 +125,10 @@ func (f *PGP) Keyring(attempts int) error {
 	}
 
 	for _, subkey := range entity.Subkeys {
-		subkey.PrivateKey.Decrypt(passphraseByte)
+		err := subkey.PrivateKey.Decrypt(passphraseByte)
+		if err == nil {
+			entity.PrimaryKey = &subkey.PrivateKey.PublicKey
+		}
 	}
 
 	entityList = append(entityList, entity)

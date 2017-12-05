@@ -74,6 +74,10 @@ func (c *InitCmd) Execute(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("[exit] only 3 passphrase attempts allowed")
 	}
 
+	if err := k.AddPublicKey(); err != nil {
+		return fmt.Errorf("Unable to add public key: %s", err)
+	}
+
 	Cfg.User = u
 	Cfg.Repository = r
 	Cfg.PrivateKey = c.key
