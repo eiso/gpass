@@ -56,8 +56,8 @@ func (c *InitCmd) Execute(cmd *cobra.Command, args []string) error {
 
 	k := encrypt.NewPGP(f, nil, nil, true)
 
-	if err := k.Keyring(); err != nil {
-		return fmt.Errorf("Unable to build keyring: %s", err)
+	if err := k.Keyring(3); err != nil {
+		return fmt.Errorf("[exit] only 3 passphrase attempts allowed")
 	}
 
 	Cfg.User = u

@@ -53,17 +53,28 @@ func shellPrompt() []byte {
 func passPrompt(p *PGP) openpgp.PromptFunction {
 
 	f := func(keys []openpgp.Key, symmetric bool) (pass []byte, err error) {
-		for _, k := range keys {
-			passphrase := shellPrompt()
+		a := 0
+		var f2 func(keys []openpgp.Key, symmetric bool, n int) (pass []byte, err error)
 
-			if err := k.PrivateKey.Decrypt(passphrase); err != nil {
-				continue
-			} else {
-				return passphrase, nil
+		f2 = func(keys []openpgp.Key, symmetric bool, n int) (pass []byte, err error) {
+
+			for _, k := range keys {
+				passphrase := shellPrompt()
+
+				if err := k.PrivateKey.Decrypt(passphrase); err != nil {
+					continue
+				} else {
+					return passphrase, nil
+				}
 			}
 
+			if n <= a {
+				return nil, err
+			}
+
+			return f2(keys, symmetric, n-1)
 		}
-		return nil, err
+		return f2(keys, symmetric, 3)
 	}
 
 	return openpgp.PromptFunction(f)
@@ -105,7 +116,7 @@ func (f *PGP) WriteFile(repoPath string, filename string) error {
 }
 
 //Keyring builds a pgp keyring based upon the users' private key
-func (f *PGP) Keyring() error {
+func (f *PGP) Keyring(attempts int) error {
 	passphraseByte := shellPrompt()
 
 	s := bytes.NewReader([]byte(f.PrivateKey))
@@ -124,6 +135,10 @@ func (f *PGP) Keyring() error {
 	if entity.PrivateKey != nil && entity.PrivateKey.Encrypted {
 		err := entity.PrivateKey.Decrypt(passphraseByte)
 		if err != nil {
+			if attempts > 1 {
+				fmt.Println("Sorry, try again.")
+				f.Keyring(attempts - 1)
+			}
 			return fmt.Errorf("Failed to decrypt main private key: %s", err)
 		}
 	}
