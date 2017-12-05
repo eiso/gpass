@@ -40,7 +40,11 @@ func (c *InsertCmd) Execute(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	p := encrypt.NewPGP(pk, f, true)
+	p := encrypt.NewPGP(pk, f, false)
+
+	if err := p.Encrypt(); err != nil {
+		return err
+	}
 
 	if err := r.Load(); err != nil {
 		return err
