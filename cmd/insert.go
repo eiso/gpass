@@ -2,16 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/eiso/gpass/encrypt"
 	"github.com/eiso/gpass/utils"
 	"github.com/spf13/cobra"
 )
 
-type InsertCmd struct {
-	accountName string
-}
+type InsertCmd struct{}
 
 func NewInsertCmd() *InsertCmd {
 	return &InsertCmd{}
@@ -54,14 +51,12 @@ func (c *InsertCmd) Execute(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := p.WriteFile(r.Path, filename); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
 
 	msg := fmt.Sprintf("Add: %s", path)
 	if err := r.CommitFile(Cfg.User, filename, msg); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
 
 	return nil
