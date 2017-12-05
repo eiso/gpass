@@ -54,6 +54,10 @@ func (c *InsertCmd) Execute(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if err := r.Branch("master", false); err != nil {
+		return err
+	}
+
 	if err := r.Branch(path, true); err != nil {
 		return err
 	}

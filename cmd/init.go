@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"path"
 
 	"github.com/eiso/gpass/encrypt"
 	"github.com/eiso/gpass/git"
@@ -44,6 +45,21 @@ func (c *InitCmd) Execute(cmd *cobra.Command, args []string) error {
 	r.Path = args[0]
 
 	if err := r.Load(); err != nil {
+		return err
+	}
+
+	if err := r.Branch("master", true); err != nil {
+		return err
+	}
+
+	e := ".empty"
+	p := path.Join(Cfg.Repository.Path, e)
+
+	if err := utils.TouchFile(p); err != nil {
+		return err
+	}
+
+	if err := r.CommitFile(Cfg.User, e, "Initial commit."); err != nil {
 		return err
 	}
 
