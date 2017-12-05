@@ -6,21 +6,68 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"syscall"
 
 	"golang.org/x/crypto/openpgp"
 	"golang.org/x/crypto/openpgp/armor"
 	"golang.org/x/crypto/openpgp/packet"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 // PGP holds the private key/pass and one message (may be encrypted/decrypted) at a time
 type PGP struct {
 	PrivateKey []byte
-	Passphrase string
+	Passphrase openpgp.PromptFunction
 	Message    []byte
 	Encrypted  bool
 }
 
 var entityList openpgp.EntityList
+
+func NewPGP(k []byte, p openpgp.PromptFunction, m []byte, e bool) *PGP {
+
+	r := new(PGP)
+	r.PrivateKey = k
+	r.Message = m
+	r.Encrypted = e
+
+	if p != nil {
+		r.Passphrase = p
+	} else {
+		r.Passphrase = passPrompt(r)
+	}
+
+	return r
+}
+
+func shellPrompt() []byte {
+	fmt.Print("Enter passphrase: ")
+	passphraseByte, err := terminal.ReadPassword(int(syscall.Stdin))
+	if err == nil {
+		fmt.Println("")
+	}
+
+	return passphraseByte
+}
+
+func passPrompt(p *PGP) openpgp.PromptFunction {
+
+	f := func(keys []openpgp.Key, symmetric bool) (pass []byte, err error) {
+		for _, k := range keys {
+			passphrase := shellPrompt()
+
+			if err := k.PrivateKey.Decrypt(passphrase); err != nil {
+				continue
+			} else {
+				return passphrase, nil
+			}
+
+		}
+		return nil, err
+	}
+
+	return openpgp.PromptFunction(f)
+}
 
 // WriteFile writes the encrypted message to a new file, fails on existing files
 func (f *PGP) WriteFile(repoPath string, filename string) error {
@@ -59,7 +106,7 @@ func (f *PGP) WriteFile(repoPath string, filename string) error {
 
 //Keyring builds a pgp keyring based upon the users' private key
 func (f *PGP) Keyring() error {
-	passphraseByte := []byte(f.Passphrase)
+	passphraseByte := shellPrompt()
 
 	s := bytes.NewReader([]byte(f.PrivateKey))
 	block, err := armor.Decode(s)
@@ -104,7 +151,7 @@ func (f *PGP) Decrypt() error {
 		return fmt.Errorf("This file is not a PGP message: %s", err)
 	}
 
-	md, err := openpgp.ReadMessage(block.Body, entityList, nil, nil)
+	md, err := openpgp.ReadMessage(block.Body, entityList, f.Passphrase, nil)
 	if err != nil {
 		return fmt.Errorf("Unable to decrypt the message: %s", err)
 	}
