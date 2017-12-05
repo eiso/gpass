@@ -1,4 +1,6 @@
 package cmd
+<<<<<<< HEAD
+=======
 
 import (
 	"fmt"
@@ -67,3 +69,4 @@ func (c *ShowCmd) Execute(cmd *cobra.Command, args []string) error {
 
 	return nil
 }
+>>>>>>> feature/show-command
