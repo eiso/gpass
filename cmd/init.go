@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/eiso/gpass/encrypt"
 	"github.com/eiso/gpass/git"
@@ -50,11 +49,10 @@ func (c *InitCmd) Execute(cmd *cobra.Command, args []string) error {
 
 	f, err := utils.LoadFile(c.key)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
 
-	k := encrypt.NewPGP(f, nil, nil, true)
+	k := encrypt.NewPGP(f, nil, true)
 
 	if err := k.Keyring(3); err != nil {
 		return fmt.Errorf("[exit] only 3 passphrase attempts allowed")

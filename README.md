@@ -9,6 +9,10 @@ Commands under development:
 - [x] help
 - [x] version
 - [x] init
+  - [x] existing repository
+  - [x] existing private key
+  - [ ] create new repository
+  - [ ] create new private key
 - [ ] insert
 - [ ] show
 - [ ] list

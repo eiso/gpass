@@ -24,18 +24,13 @@ type PGP struct {
 
 var entityList openpgp.EntityList
 
-func NewPGP(k []byte, p openpgp.PromptFunction, m []byte, e bool) *PGP {
+func NewPGP(k []byte, m []byte, e bool) *PGP {
 
 	r := new(PGP)
 	r.PrivateKey = k
 	r.Message = m
 	r.Encrypted = e
-
-	if p != nil {
-		r.Passphrase = p
-	} else {
-		r.Passphrase = passPrompt(r)
-	}
+	r.Passphrase = Prompt(r)
 
 	return r
 }
@@ -50,7 +45,8 @@ func shellPrompt() []byte {
 	return passphraseByte
 }
 
-func passPrompt(p *PGP) openpgp.PromptFunction {
+// Prompt function for openpgp
+func Prompt(p *PGP) openpgp.PromptFunction {
 
 	f := func(keys []openpgp.Key, symmetric bool) (pass []byte, err error) {
 		a := 0
