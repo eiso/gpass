@@ -55,6 +55,10 @@ func (c *ShowCmd) Execute(cmd *cobra.Command, args []string) error {
 
 	p := encrypt.NewPGP(pk, f, true)
 
+	if err := p.LoadKeys(); err != nil {
+		return err
+	}
+
 	if err := p.Keyring(3); err != nil {
 		return fmt.Errorf("[exit] only 3 passphrase attempts allowed")
 	}
