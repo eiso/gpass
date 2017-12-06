@@ -53,13 +53,13 @@ func (c *InitCmd) Execute(cmd *cobra.Command, args []string) error {
 	}
 
 	e := ".empty"
-	p := path.Join(Cfg.Repository.Path, e)
+	p := path.Join(r.Path, e)
 
 	if err := utils.TouchFile(p); err != nil {
 		return err
 	}
 
-	if err := r.CommitFile(Cfg.User, e, "Initial commit."); err != nil {
+	if err := r.CommitFile(u, e, "Initial commit."); err != nil {
 		return err
 	}
 
@@ -70,12 +70,12 @@ func (c *InitCmd) Execute(cmd *cobra.Command, args []string) error {
 
 	k := encrypt.NewPGP(f, nil, true)
 
-	if err := k.Keyring(3); err != nil {
-		return fmt.Errorf("[exit] only 3 passphrase attempts allowed")
+	if err := k.LoadKeys(); err != nil {
+		return err
 	}
 
-	if err := k.AddPublicKey(); err != nil {
-		return fmt.Errorf("Unable to add public key: %s", err)
+	if err := k.Keyring(3); err != nil {
+		return fmt.Errorf("[exit] only 3 passphrase attempts allowed")
 	}
 
 	Cfg.User = u

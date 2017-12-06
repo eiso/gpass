@@ -16,7 +16,6 @@ import (
 
 // PGP holds the private key/pass and one message (may be encrypted/decrypted) at a time
 type PGP struct {
-	PublicKey  []byte
 	PrivateKey []byte
 	Message    []byte
 	Encrypted  bool
@@ -35,17 +34,25 @@ func NewPGP(k []byte, m []byte, e bool) *PGP {
 	return r
 }
 
-func (f *PGP) AddPublicKey() error {
-	b := bytes.NewBuffer(nil)
-
-	w, _ := armor.Encode(b, openpgp.PublicKeyType, nil)
-	err := entityList[0].Serialize(w)
-	if err != nil {
-		return err
+func (f *PGP) LoadKeys() error {
+	if len(entityList) > 0 {
+		return fmt.Errorf("Keys already loaded")
 	}
-	w.Close()
 
-	f.PublicKey = b.Bytes()
+	s := bytes.NewReader([]byte(f.PrivateKey))
+	block, err := armor.Decode(s)
+	if err != nil {
+		return fmt.Errorf("Not an armor encoded PGP private key: %s", err)
+	} else if block.Type != openpgp.PrivateKeyType {
+		return fmt.Errorf("Not a OpenPGP private key: %s", err)
+	}
+
+	entity, err := openpgp.ReadEntity(packet.NewReader(block.Body))
+	if err != nil {
+		return fmt.Errorf("Unable to read armor decoded key: %s", err)
+	}
+
+	entityList = append(entityList, entity)
 
 	return nil
 }
@@ -98,20 +105,9 @@ func (f *PGP) WriteFile(repoPath string, filename string) error {
 
 //Keyring builds a pgp keyring based upon the users' private key
 func (f *PGP) Keyring(attempts int) error {
+	entity := entityList[0]
+
 	passphraseByte := shellPrompt()
-
-	s := bytes.NewReader([]byte(f.PrivateKey))
-	block, err := armor.Decode(s)
-	if err != nil {
-		return fmt.Errorf("Not an armor encoded PGP private key: %s", err)
-	} else if block.Type != openpgp.PrivateKeyType {
-		return fmt.Errorf("Not a OpenPGP private key: %s", err)
-	}
-
-	entity, err := openpgp.ReadEntity(packet.NewReader(block.Body))
-	if err != nil {
-		return fmt.Errorf("Unable to read armor decoded key: %s", err)
-	}
 
 	if entity.PrivateKey != nil && entity.PrivateKey.Encrypted {
 		err := entity.PrivateKey.Decrypt(passphraseByte)
@@ -125,10 +121,7 @@ func (f *PGP) Keyring(attempts int) error {
 	}
 
 	for _, subkey := range entity.Subkeys {
-		err := subkey.PrivateKey.Decrypt(passphraseByte)
-		if err == nil {
-			entity.PrimaryKey = &subkey.PrivateKey.PublicKey
-		}
+		subkey.PrivateKey.Decrypt(passphraseByte)
 	}
 
 	entityList = append(entityList, entity)
@@ -178,6 +171,8 @@ func (f *PGP) Encrypt() error {
 	if err != nil {
 		return fmt.Errorf("Unable to armor encode")
 	}
+
+	//entity := entityList[0]
 
 	e, err := openpgp.Encrypt(b, entityList, nil, nil, nil)
 	if err != nil {
