@@ -14,8 +14,10 @@ Commands under development:
   - [ ] create new repository
   - [ ] create new private key
 - [x] insert
+  - [x] single line
+  - [ ] multiple line (editor)
 - [x] show
-- [ ] list
+- [x] list
 - [ ] rm
 - [ ] mv
 - [ ] cp
