@@ -23,6 +23,7 @@ type PGP struct {
 
 var entityList openpgp.EntityList
 
+// NewPGP creates a new instance of PGP struct
 func NewPGP(k []byte, m []byte, e bool) *PGP {
 
 	r := new(PGP)
@@ -34,6 +35,7 @@ func NewPGP(k []byte, m []byte, e bool) *PGP {
 	return r
 }
 
+// LoadKeys loads the private key into entityList (also known as a pgp keyring)
 func (f *PGP) LoadKeys() error {
 	if len(entityList) > 0 {
 		return fmt.Errorf("Keys already loaded")
@@ -68,7 +70,6 @@ func shellPrompt() []byte {
 }
 
 // WriteFile writes the encrypted message to a new file, fails on existing files
-// TODO, allow folders to be created e.g. google.com/user@gmail.com
 func (f *PGP) WriteFile(repoPath string, filename string) error {
 	if len(f.Message) == 0 {
 		return fmt.Errorf("The message content has not been loaded")

@@ -151,6 +151,25 @@ func (r *Repository) CommitFile(u *User, filename string, msg string) error {
 	return nil
 }
 
+// ListBranches creates a list of all branches
+func (r *Repository) ListBranches() []string {
+
+	var b []string
+
+	refs, _ := r.root.References()
+	refs.ForEach(func(ref *plumbing.Reference) error {
+		if ref.Type() == plumbing.HashReference {
+			if ref.Name().IsBranch() {
+				b = append(b, ref.Name().Short())
+			}
+		}
+		return nil
+	})
+
+	return b
+
+}
+
 // BranchExists checks if a branch exists based on its name
 func (r *Repository) BranchExists(n string) bool {
 	b := false
