@@ -44,6 +44,10 @@ func (c *ShowCmd) Execute(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if !r.BranchExists("gpass") {
+		return fmt.Errorf("gpass has not been initialized yet, please run: gpass init")
+	}
+
 	if !r.BranchExists(arg) {
 		return fmt.Errorf("the account does not exist")
 	}

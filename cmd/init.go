@@ -48,7 +48,7 @@ func (c *InitCmd) Execute(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := r.Branch("master", true); err != nil {
+	if err := r.Branch("gpass", true); err != nil {
 		return err
 	}
 

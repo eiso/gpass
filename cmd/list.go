@@ -34,6 +34,10 @@ func (c *ListCmd) Execute(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if !r.BranchExists("gpass") {
+		return fmt.Errorf("gpass has not been initialized yet, please run: gpass init")
+	}
+
 	tree := treeprint.New()
 	b = r.ListBranches()
 
@@ -42,7 +46,7 @@ func (c *ListCmd) Execute(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, branch := range b {
-		if branch == "master" {
+		if branch == "gpass" {
 			continue
 		}
 

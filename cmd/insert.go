@@ -43,11 +43,15 @@ func (c *InsertCmd) Execute(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if !r.BranchExists("gpass") {
+		return fmt.Errorf("gpass has not been initialized yet, please run: gpass init")
+	}
+
 	if r.BranchExists(path) {
 		return fmt.Errorf("the account already exists")
 	}
 
-	if err := r.Branch("master", false); err != nil {
+	if err := r.Branch("gpass", false); err != nil {
 		return err
 	}
 
