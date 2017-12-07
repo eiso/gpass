@@ -26,6 +26,9 @@ func (c *ListCmd) Cmd() *cobra.Command {
 }
 
 func (c *ListCmd) Execute(cmd *cobra.Command, args []string) error {
+	if err := Load(); err != nil {
+		return err
+	}
 
 	var b []string
 	r := Cfg.Repository

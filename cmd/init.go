@@ -48,8 +48,11 @@ func (c *InitCmd) Execute(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := r.Branch("gpass", true); err != nil {
-		return err
+	if !r.BranchExists("gpass") {
+		err := r.Branch("gpass", true)
+		if err != nil {
+			return err
+		}
 	}
 
 	e := ".empty"

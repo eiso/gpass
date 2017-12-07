@@ -25,6 +25,10 @@ func (c *InsertCmd) Cmd() *cobra.Command {
 }
 
 func (c *InsertCmd) Execute(cmd *cobra.Command, args []string) error {
+	if err := Load(); err != nil {
+		return err
+	}
+
 	if len(args) != 1 {
 		return fmt.Errorf("please provide a name for the account you are inserting")
 	}

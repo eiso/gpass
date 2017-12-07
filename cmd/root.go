@@ -16,7 +16,7 @@ type Config struct {
 	PrivateKey string          `json:"private-key"`
 }
 
-// Config is a package variable initialized with the init command
+// Cfg is a package variable initialized with the init command
 var Cfg Config
 
 var rootCmd = &cobra.Command{
@@ -25,6 +25,16 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Please specify a command or run: gpass --help")
 	},
+}
+
+// TODO: move repository and private key loading from each command here
+func Load() error {
+
+	if Cfg.Repository == nil {
+		return fmt.Errorf("gpass has not been initialized yet, please run: gpass init")
+	}
+
+	return nil
 }
 
 func init() {
