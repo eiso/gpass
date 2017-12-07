@@ -19,7 +19,7 @@ func LoadFile(filename string) ([]byte, error) {
 	return f, err
 }
 
-// Touch file
+// TouchFile creates an empty file
 func TouchFile(filename string) error {
 	_, err := os.OpenFile(filename, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
@@ -29,6 +29,7 @@ func TouchFile(filename string) error {
 	return nil
 }
 
+// PassShellPrompt loads a shell prompt for entering and confirming a passphrase
 func PassShellPrompt(prompts []string) ([]byte, error) {
 
 	if len(prompts) != 2 {

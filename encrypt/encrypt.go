@@ -80,6 +80,11 @@ func (f *PGP) WriteFile(repoPath string, filename string) error {
 
 	p := path.Join(repoPath, filename)
 
+	pd := path.Dir(p)
+	if pd != "" {
+		os.MkdirAll(pd, os.FileMode(0700))
+	}
+
 	o, err := os.Open(p)
 	if err == nil {
 		o.Close()
