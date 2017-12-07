@@ -16,9 +16,8 @@ import (
 
 // Repository holds the repository meta data
 type Repository struct {
-	Path  string
-	root  *git.Repository
-	Files []string
+	Path string
+	root *git.Repository
 }
 
 // User is the relevant user information
@@ -150,4 +149,20 @@ func (r *Repository) CommitFile(u *User, filename string, msg string) error {
 	}
 
 	return nil
+}
+
+// BranchExists checks if a branch exists based on its name
+func (r *Repository) BranchExists(n string) bool {
+	b := false
+	refs, _ := r.root.References()
+	refs.ForEach(func(ref *plumbing.Reference) error {
+		if ref.Type() == plumbing.HashReference {
+			if ref.Name().IsBranch() && ref.Name().Short() == n {
+				b = true
+			}
+		}
+		return nil
+	})
+
+	return b
 }

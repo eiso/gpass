@@ -13,8 +13,8 @@ Commands under development:
   - [x] existing private key
   - [ ] create new repository
   - [ ] create new private key
-- [ ] insert
-- [ ] show
+- [x] insert
+- [x] show
 - [ ] list
 - [ ] rm
 - [ ] mv
