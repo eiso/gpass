@@ -100,7 +100,6 @@ func (r *Repository) Load() error {
 
 // Branch creates/switches to a new branch
 func (r *Repository) Branch(s string, create bool) error {
-
 	name := fmt.Sprintf("refs/heads/%s", s)
 
 	w, err := r.root.Worktree()
@@ -122,7 +121,6 @@ func (r *Repository) Branch(s string, create bool) error {
 
 // CreateOrphanBranch creates an orphan branch
 func (r *Repository) CreateOrphanBranch(u *User, s string) error {
-
 	name := fmt.Sprintf("refs/heads/%s", s)
 
 	w, err := r.root.Worktree()

@@ -67,11 +67,15 @@ func (c *RmCmd) Execute(cmd *cobra.Command, args []string) error {
 	if err := r.Commit(Cfg.User, filename, msg); err != nil {
 		return err
 	}
+
+	// TODO: add a flag to remove the branch as well
 	/*
 		if err := r.RemoveBranch(args[0]); err != nil {
 			return err
 		}
-		fmt.Println("Successfully removed (if you add the account again, all version history will be back)")
 	*/
+
+	fmt.Println("Successfully removed the account")
+
 	return nil
 }
