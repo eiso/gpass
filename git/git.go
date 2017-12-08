@@ -98,9 +98,29 @@ func (r *Repository) Load() error {
 	return nil
 }
 
-// Branch creates/switches to a new branch based on the filename of the msg
+// Branch creates/switches to a new branch
 func (r *Repository) Branch(s string, create bool) error {
+	name := fmt.Sprintf("refs/heads/%s", s)
 
+	w, err := r.root.Worktree()
+	if err != nil {
+		return fmt.Errorf("Unable to load the work tree: %s", err)
+	}
+
+	o := &git.CheckoutOptions{}
+
+	o.Branch = plumbing.ReferenceName(name)
+	o.Create = create
+
+	if err = w.Checkout(o); err != nil {
+		return fmt.Errorf("Unable to create a new branch: %s", err)
+	}
+
+	return nil
+}
+
+// CreateOrphanBranch creates an orphan branch
+func (r *Repository) CreateOrphanBranch(u *User, s string) error {
 	name := fmt.Sprintf("refs/heads/%s", s)
 
 	w, err := r.root.Worktree()
@@ -115,10 +135,25 @@ func (r *Repository) Branch(s string, create bool) error {
 	}
 
 	o.Branch = plumbing.ReferenceName(name)
-	o.Create = create
+	o.Create = true
 
 	if err = w.Checkout(o); err != nil {
 		return fmt.Errorf("Unable to create a new branch: %s", err)
+	}
+
+	var h []plumbing.Hash
+
+	msg := fmt.Sprintf("creating branch for: %s", s)
+	_, err = w.Commit(msg, &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  u.Name,
+			Email: u.Email,
+			When:  time.Now(),
+		},
+		Parents: h,
+	})
+	if err != nil {
+		return fmt.Errorf("Unable to make the initial commit: %s", err)
 	}
 
 	return nil
@@ -144,11 +179,37 @@ func (r *Repository) CommitFile(u *User, filename string, msg string) error {
 			When:  time.Now(),
 		},
 	})
+
 	if err != nil {
 		return fmt.Errorf("Unable to commit: %s", err)
 	}
 
 	return nil
+}
+
+// Commit makes a commit
+func (r *Repository) Commit(u *User, filename string, msg string) error {
+
+	w, err := r.root.Worktree()
+	if err != nil {
+		return fmt.Errorf("Unable to load the work tree: %s", err)
+	}
+
+	_, err = w.Commit(msg, &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  u.Name,
+			Email: u.Email,
+			When:  time.Now(),
+		},
+		All: true,
+	})
+
+	if err != nil {
+		return fmt.Errorf("Unable to commit: %s", err)
+	}
+
+	return nil
+
 }
 
 // ListBranches creates a list of all branches
@@ -184,4 +245,15 @@ func (r *Repository) BranchExists(n string) bool {
 	})
 
 	return b
+}
+
+// RemoveBranch deletes a branch based on its name
+func (r *Repository) RemoveBranch(n string) error {
+
+	err := r.root.Storer.RemoveReference(plumbing.ReferenceName("refs/heads/" + n))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

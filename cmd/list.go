@@ -26,23 +26,29 @@ func (c *ListCmd) Cmd() *cobra.Command {
 }
 
 func (c *ListCmd) Execute(cmd *cobra.Command, args []string) error {
+	if err := InitCheck(); err != nil {
+		return err
+	}
 
-	var b []string
 	r := Cfg.Repository
 
 	if err := r.Load(); err != nil {
 		return err
 	}
 
+	if !r.BranchExists("gpass") {
+		return fmt.Errorf("gpass has not been initialized yet, please run: gpass init")
+	}
+
 	tree := treeprint.New()
-	b = r.ListBranches()
+	b := r.ListBranches()
 
 	if len(b) <= 1 {
 		return fmt.Errorf("nothing to list here, no accounts have been added yet")
 	}
 
 	for _, branch := range b {
-		if branch == "master" {
+		if branch == "gpass" {
 			continue
 		}
 

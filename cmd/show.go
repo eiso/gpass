@@ -27,13 +27,17 @@ func (c *ShowCmd) Cmd() *cobra.Command {
 }
 
 func (c *ShowCmd) Execute(cmd *cobra.Command, args []string) error {
+	if err := InitCheck(); err != nil {
+		return err
+	}
+
 	if len(args) != 1 {
 		return fmt.Errorf("please provide a name for the account you are inserting")
 	}
 
 	r := Cfg.Repository
-	arg := args[0]
-	file := path.Join(r.Path, arg+".gpg")
+	filename := args[0] + ".gpg"
+	file := path.Join(r.Path, filename)
 
 	pk, err := utils.LoadFile(Cfg.PrivateKey)
 	if err != nil {
@@ -44,11 +48,15 @@ func (c *ShowCmd) Execute(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if !r.BranchExists(arg) {
+	if !r.BranchExists("gpass") {
+		return fmt.Errorf("gpass has not been initialized yet, please run: gpass init")
+	}
+
+	if !r.BranchExists(filename) {
 		return fmt.Errorf("the account does not exist")
 	}
 
-	if err := r.Branch(arg, false); err != nil {
+	if err := r.Branch(filename, false); err != nil {
 		return err
 	}
 

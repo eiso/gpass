@@ -25,14 +25,21 @@ func (c *InsertCmd) Cmd() *cobra.Command {
 }
 
 func (c *InsertCmd) Execute(cmd *cobra.Command, args []string) error {
+
+	if err := InitCheck(); err != nil {
+		return err
+	}
+
 	if len(args) != 1 {
 		return fmt.Errorf("please provide a name for the account you are inserting")
 	}
 
-	path := args[0]
-	filename := path + ".gpg"
-
 	var prompts []string
+	var path string
+	var filename string
+
+	path = args[0]
+	filename = path + ".gpg"
 
 	prompts = append(prompts, "Enter password for "+path+": ")
 	prompts = append(prompts, "Retype password for "+path+": ")
@@ -43,20 +50,24 @@ func (c *InsertCmd) Execute(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if r.BranchExists(path) {
+	if !r.BranchExists("gpass") {
+		return fmt.Errorf("gpass has not been initialized yet, please run: gpass init")
+	}
+
+	if r.BranchExists(filename) {
 		return fmt.Errorf("the account already exists")
-	}
-
-	if err := r.Branch("master", false); err != nil {
-		return err
-	}
-
-	if err := r.Branch(path, true); err != nil {
-		return err
 	}
 
 	f, err := utils.PassShellPrompt(prompts)
 	if err != nil {
+		return err
+	}
+
+	if err := r.Branch("gpass", false); err != nil {
+		return err
+	}
+
+	if err := r.CreateOrphanBranch(Cfg.User, filename); err != nil {
 		return err
 	}
 

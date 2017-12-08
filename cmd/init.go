@@ -48,8 +48,11 @@ func (c *InitCmd) Execute(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := r.Branch("master", true); err != nil {
-		return err
+	if !r.BranchExists("gpass") {
+		err := r.CreateOrphanBranch(u, "gpass")
+		if err != nil {
+			return err
+		}
 	}
 
 	e := ".empty"
