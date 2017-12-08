@@ -159,6 +159,29 @@ func (r *Repository) CreateOrphanBranch(u *User, s string) error {
 	return nil
 }
 
+//TagBranch adds a tag to a branch
+func (r *Repository) TagBranch(tag string, s string) error {
+	name := fmt.Sprintf("refs/heads/%s", s)
+
+	ref, err := r.root.Reference(plumbing.ReferenceName(name), false)
+	if err != nil {
+		return err
+	}
+
+	commit, err := r.root.CommitObject(ref.Hash())
+	if err != nil {
+		return err
+	}
+
+	tr := plumbing.NewHashReference(plumbing.ReferenceName(tag), commit.Hash)
+
+	if err := r.root.Storer.SetReference(tr); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // CommitFile adds the file & commits it
 func (r *Repository) CommitFile(u *User, filename string, msg string) error {
 

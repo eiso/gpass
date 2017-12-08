@@ -2,9 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"path"
-	"strings"
 
 	"github.com/eiso/gpass/utils"
 	"github.com/spf13/cobra"
@@ -33,8 +30,8 @@ func (c *RmCmd) Execute(cmd *cobra.Command, args []string) error {
 
 	r := Cfg.Repository
 	filename := args[0] + ".gpg"
-	d := strings.Split(args[0], string(os.PathSeparator))
-	path := path.Join(r.Path, d[0])
+	//d := strings.Split(filename, string(os.PathSeparator))
+	//path := path.Join(r.Path, d[0])
 
 	if err := r.Load(); err != nil {
 		return err
@@ -59,23 +56,21 @@ func (c *RmCmd) Execute(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := utils.DeletePath(path); err != nil {
+	n := fmt.Sprintf("refs/tags/%s", filename)
+	if err := r.TagBranch(n, filename); err != nil {
 		return err
 	}
 
-	msg := fmt.Sprintf("Remove: %s", args[0])
-	if err := r.Commit(Cfg.User, filename, msg); err != nil {
+	// TODO: figure out how to have a commit for removing the account
+	if err := r.RemoveBranch(filename); err != nil {
 		return err
 	}
 
-	// TODO: add a flag to remove the branch as well
-	/*
-		if err := r.RemoveBranch(args[0]); err != nil {
-			return err
-		}
-	*/
+	if err := r.Branch("gpass", false); err != nil {
+		return err
+	}
 
-	fmt.Println("Successfully removed the account")
+	fmt.Println("Successfully removed the account", args[0])
 
 	return nil
 }
