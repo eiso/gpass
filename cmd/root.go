@@ -23,12 +23,13 @@ var rootCmd = &cobra.Command{
 	Use:   "gpass",
 	Short: "gpass is an encrypted account manager built on top of git.",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Please specify a command or run: gpass --help")
+		c := NewListCmd()
+		c.Execute(cmd, args)
+		//fmt.Println("Please specify a command or run: gpass --help")
 	},
 }
 
-// TODO: move repository and private key loading from each command here
-func Load() error {
+func InitCheck() error {
 
 	if Cfg.Repository == nil {
 		return fmt.Errorf("gpass has not been initialized yet, please run: gpass init")
@@ -46,6 +47,7 @@ func init() {
 	rootCmd.AddCommand(NewInsertCmd().Cmd())
 	rootCmd.AddCommand(NewShowCmd().Cmd())
 	rootCmd.AddCommand(NewListCmd().Cmd())
+	rootCmd.AddCommand(NewRmCmd().Cmd())
 }
 
 // Execute the cobra commands

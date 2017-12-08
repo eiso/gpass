@@ -25,7 +25,6 @@ var entityList openpgp.EntityList
 
 // NewPGP creates a new instance of PGP struct
 func NewPGP(k []byte, m []byte, e bool) *PGP {
-
 	r := new(PGP)
 
 	r.PrivateKey = k

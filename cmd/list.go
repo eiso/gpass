@@ -26,11 +26,10 @@ func (c *ListCmd) Cmd() *cobra.Command {
 }
 
 func (c *ListCmd) Execute(cmd *cobra.Command, args []string) error {
-	if err := Load(); err != nil {
+	if err := InitCheck(); err != nil {
 		return err
 	}
 
-	var b []string
 	r := Cfg.Repository
 
 	if err := r.Load(); err != nil {
@@ -42,7 +41,7 @@ func (c *ListCmd) Execute(cmd *cobra.Command, args []string) error {
 	}
 
 	tree := treeprint.New()
-	b = r.ListBranches()
+	b := r.ListBranches()
 
 	if len(b) <= 1 {
 		return fmt.Errorf("nothing to list here, no accounts have been added yet")

@@ -1,9 +1,12 @@
 package utils
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
+	"strings"
 	"syscall"
 
 	"golang.org/x/crypto/ssh/terminal"
@@ -27,6 +30,39 @@ func TouchFile(filename string) error {
 	}
 
 	return nil
+}
+
+// DeletePath removes everything in a path (incl. dirs)
+func DeletePath(dir string) error {
+	err := os.RemoveAll(dir)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ConfirmShellPrompt load a prompt for a [y/n] confirmation
+// source: https://gist.github.com/r0l1/3dcbb0c8f6cfe9c66ab8008f55f8f28b
+func ConfirmShellPrompt(s string) bool {
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Printf("%s [y/n]: ", s)
+
+		response, err := reader.ReadString('\n')
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		response = strings.ToLower(strings.TrimSpace(response))
+
+		if response == "y" || response == "yes" {
+			return true
+		} else if response == "n" || response == "no" {
+			return false
+		}
+	}
 }
 
 // PassShellPrompt loads a shell prompt for entering and confirming a passphrase
