@@ -18,7 +18,7 @@ Commands under development:
   - [ ] multiple line (editor)
 - [x] show
 - [x] list
-- [ ] rm
+- [x] rm
 - [ ] mv
 - [ ] cp
 - [ ] edit
