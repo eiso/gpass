@@ -24,12 +24,13 @@ func (c *MvCmd) Cmd() *cobra.Command {
 	return cmd
 }
 
-// Switch to branch of account
-// Create orphan branch
-// Remove previous branch
-// Move test.com/test.gpg -> google.com/testdup.gpg
-// Delete test.com/ path
-// CommitFile: "Moved from oldpath to newpath"
+// TODO:
+// Debug case:
+// 1. insert p1
+// 2. mv p1 p2
+// 3. rm p2
+// 4. insert p1
+// 5. mv p1 p2
 
 func (c *MvCmd) Execute(cmd *cobra.Command, args []string) error {
 	if err := InitCheck(); err != nil {
