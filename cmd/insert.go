@@ -67,9 +67,14 @@ func (c *InsertCmd) Execute(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// TODO: check if a tag exists, if so, create a branch based on the tag to restore version history
-	if err := r.CreateOrphanBranch(Cfg.User, filename); err != nil {
-		return err
+	if !r.TagExists(filename) {
+		if err := r.CreateOrphanBranch(Cfg.User, filename); err != nil {
+			return err
+		}
+	} else {
+		if err := r.TagBranch(filename, true); err != nil {
+			return err
+		}
 	}
 
 	pk, err := utils.LoadFile(Cfg.PrivateKey)

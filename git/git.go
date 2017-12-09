@@ -159,8 +159,36 @@ func (r *Repository) CreateOrphanBranch(u *User, s string) error {
 	return nil
 }
 
-//TagBranch adds a tag to a branch
-func (r *Repository) TagBranch(tag string, s string) error {
+// TagBranch creates/switches to a branch based on a tag name
+func (r *Repository) TagBranch(s string, create bool) error {
+	tag := fmt.Sprintf("refs/tags/%s", s)
+	name := fmt.Sprintf("refs/heads/%s", s)
+
+	ref, err := r.root.Reference(plumbing.ReferenceName(tag), false)
+	if err != nil {
+		return err
+	}
+
+	w, err := r.root.Worktree()
+	if err != nil {
+		return fmt.Errorf("Unable to load the work tree: %s", err)
+	}
+
+	o := &git.CheckoutOptions{}
+
+	o.Hash = ref.Hash()
+	o.Branch = plumbing.ReferenceName(name)
+	o.Create = create
+
+	if err = w.Checkout(o); err != nil {
+		return fmt.Errorf("Unable to create a new branch: %s", err)
+	}
+
+	return nil
+}
+
+//AddTagBranch adds a tag to a branch
+func (r *Repository) AddTagBranch(tag string, s string) error {
 	name := fmt.Sprintf("refs/heads/%s", s)
 
 	ref, err := r.root.Reference(plumbing.ReferenceName(name), false)
@@ -272,11 +300,25 @@ func (r *Repository) BranchExists(n string) bool {
 
 // RemoveBranch deletes a branch based on its name
 func (r *Repository) RemoveBranch(n string) error {
-
 	err := r.root.Storer.RemoveReference(plumbing.ReferenceName("refs/heads/" + n))
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (r *Repository) TagExists(n string) bool {
+	b := false
+	refs, _ := r.root.References()
+	refs.ForEach(func(ref *plumbing.Reference) error {
+		if ref.Type() == plumbing.HashReference {
+			if ref.Name().IsTag() && ref.Name().Short() == n {
+				b = true
+			}
+		}
+		return nil
+	})
+
+	return b
 }
