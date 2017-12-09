@@ -42,6 +42,16 @@ func DeletePath(path string) error {
 	return nil
 }
 
+// RenamePath renames a path from old to new
+func RenamePath(old string, new string) error {
+	err := os.Rename(old, new)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // ConfirmShellPrompt load a prompt for a [y/n] confirmation
 // source: https://gist.github.com/r0l1/3dcbb0c8f6cfe9c66ab8008f55f8f28b
 func ConfirmShellPrompt(s string) bool {

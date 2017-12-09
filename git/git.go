@@ -107,9 +107,38 @@ func (r *Repository) Branch(s string, create bool) error {
 	}
 
 	o := &git.CheckoutOptions{}
-
 	o.Branch = plumbing.ReferenceName(name)
 	o.Create = create
+
+	if err = w.Checkout(o); err != nil {
+		return fmt.Errorf("Unable to create a new branch: %s", err)
+	}
+
+	return nil
+}
+
+// CreateBranch Creates a new branch based on an existing branch
+func (r *Repository) CreateBranch(origin string, new string, create bool) error {
+	origin = fmt.Sprintf("refs/heads/%s", origin)
+	new = fmt.Sprintf("refs/heads/%s", new)
+
+	w, err := r.root.Worktree()
+	if err != nil {
+		return fmt.Errorf("Unable to load the work tree: %s", err)
+	}
+
+	o := &git.CheckoutOptions{}
+	o.Branch = plumbing.ReferenceName(new)
+	o.Create = create
+
+	if create {
+		ref, err := r.root.Reference(plumbing.ReferenceName(origin), false)
+		if err != nil {
+			return err
+		}
+
+		o.Hash = ref.Hash()
+	}
 
 	if err = w.Checkout(o); err != nil {
 		return fmt.Errorf("Unable to create a new branch: %s", err)
@@ -128,11 +157,6 @@ func (r *Repository) CreateOrphanBranch(u *User, s string) error {
 	}
 
 	o := &git.CheckoutOptions{}
-
-	if err = o.Validate(); err != nil {
-		return err
-	}
-
 	o.Branch = plumbing.ReferenceName(name)
 	o.Create = true
 
@@ -228,6 +252,7 @@ func (r *Repository) CommitFile(u *User, filename string, msg string) error {
 			Email: u.Email,
 			When:  time.Now(),
 		},
+		All: true,
 	})
 
 	if err != nil {
@@ -305,6 +330,7 @@ func (r *Repository) RemoveBranch(n string) error {
 	return nil
 }
 
+// TagExists checks if a certain tag reference exists
 func (r *Repository) TagExists(n string) bool {
 	b := false
 	refs, _ := r.root.References()

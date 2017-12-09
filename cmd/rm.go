@@ -31,6 +31,10 @@ func (c *RmCmd) Execute(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if len(args) != 1 {
+		return fmt.Errorf("please provide a name for the account you are removing")
+	}
+
 	r := Cfg.Repository
 	filename := args[0] + ".gpg"
 	d := strings.Split(filename, string(os.PathSeparator))
