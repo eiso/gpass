@@ -88,7 +88,6 @@ func (u *User) load() error {
 
 // Load a git repository from disk
 func (r *Repository) Load() error {
-
 	s, err := git.PlainOpen(r.Path)
 	if err != nil {
 		return err
@@ -240,7 +239,6 @@ func (r *Repository) CommitFile(u *User, filename string, msg string) error {
 
 // Commit makes a commit
 func (r *Repository) Commit(u *User, filename string, msg string) error {
-
 	w, err := r.root.Worktree()
 	if err != nil {
 		return fmt.Errorf("Unable to load the work tree: %s", err)
@@ -265,7 +263,6 @@ func (r *Repository) Commit(u *User, filename string, msg string) error {
 
 // ListBranches creates a list of all branches
 func (r *Repository) ListBranches() []string {
-
 	var b []string
 
 	refs, _ := r.root.References()

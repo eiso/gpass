@@ -52,6 +52,7 @@ func (c *ListCmd) Execute(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
+		branch = branch[:len(branch)-4]
 		parts := strings.Split(branch, string(os.PathSeparator))
 
 		t := tree.FindByValue(parts[0])

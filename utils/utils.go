@@ -33,8 +33,8 @@ func TouchFile(filename string) error {
 }
 
 // DeletePath removes everything in a path (incl. dirs)
-func DeletePath(dir string) error {
-	err := os.RemoveAll(dir)
+func DeletePath(path string) error {
+	err := os.RemoveAll(path)
 	if err != nil {
 		return err
 	}
