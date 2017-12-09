@@ -67,8 +67,14 @@ func (c *InsertCmd) Execute(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := r.CreateOrphanBranch(Cfg.User, filename); err != nil {
-		return err
+	if !r.TagExists(filename) {
+		if err := r.CreateOrphanBranch(Cfg.User, filename); err != nil {
+			return err
+		}
+	} else {
+		if err := r.TagBranch(filename, true); err != nil {
+			return err
+		}
 	}
 
 	pk, err := utils.LoadFile(Cfg.PrivateKey)
