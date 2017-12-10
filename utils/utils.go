@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
 	"strings"
 	"syscall"
 
@@ -33,8 +34,25 @@ func TouchFile(filename string) error {
 }
 
 // DeletePath removes everything in a path (incl. dirs)
-func DeletePath(dir string) error {
-	err := os.RemoveAll(dir)
+func DeletePath(path string) error {
+	err := os.RemoveAll(path)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// RenamePath renames a path from old to new
+func RenamePath(old string, new string) error {
+	pd := path.Dir(new)
+	if pd != "" {
+		if err := os.MkdirAll(pd, os.FileMode(0700)); err != nil {
+			return err
+		}
+	}
+
+	err := os.Rename(old, new)
 	if err != nil {
 		return err
 	}

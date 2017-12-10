@@ -19,8 +19,8 @@ Commands under development:
 - [x] show
 - [x] list
 - [x] rm
-- [ ] mv
-- [ ] cp
+- [x] mv
+- [x] cp
 - [ ] edit
 - [ ] generate
 - [ ] grep

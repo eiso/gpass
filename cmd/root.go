@@ -30,7 +30,6 @@ var rootCmd = &cobra.Command{
 }
 
 func InitCheck() error {
-
 	if Cfg.Repository == nil {
 		return fmt.Errorf("gpass has not been initialized yet, please run: gpass init")
 	}
@@ -48,6 +47,8 @@ func init() {
 	rootCmd.AddCommand(NewShowCmd().Cmd())
 	rootCmd.AddCommand(NewListCmd().Cmd())
 	rootCmd.AddCommand(NewRmCmd().Cmd())
+	rootCmd.AddCommand(NewMvCmd().Cmd())
+	rootCmd.AddCommand(NewCpCmd().Cmd())
 }
 
 // Execute the cobra commands

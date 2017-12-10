@@ -58,6 +58,7 @@ func (f *PGP) LoadKeys() error {
 	return nil
 }
 
+// TODO: modify keyring and move this to utils
 func shellPrompt() []byte {
 	fmt.Print("Enter passphrase: ")
 	passphraseByte, err := terminal.ReadPassword(int(syscall.Stdin))
@@ -69,6 +70,7 @@ func shellPrompt() []byte {
 }
 
 // WriteFile writes the encrypted message to a new file, fails on existing files
+// TODO: modify and move to utils package
 func (f *PGP) WriteFile(repoPath string, filename string) error {
 	if len(f.Message) == 0 {
 		return fmt.Errorf("The message content has not been loaded")

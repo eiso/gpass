@@ -88,7 +88,6 @@ func (u *User) load() error {
 
 // Load a git repository from disk
 func (r *Repository) Load() error {
-
 	s, err := git.PlainOpen(r.Path)
 	if err != nil {
 		return err
@@ -98,8 +97,8 @@ func (r *Repository) Load() error {
 	return nil
 }
 
-// Branch creates/switches to a new branch
-func (r *Repository) Branch(s string, create bool) error {
+// SwitchBranch switches to a new branch
+func (r *Repository) SwitchBranch(s string) error {
 	name := fmt.Sprintf("refs/heads/%s", s)
 
 	w, err := r.root.Worktree()
@@ -108,9 +107,35 @@ func (r *Repository) Branch(s string, create bool) error {
 	}
 
 	o := &git.CheckoutOptions{}
-
 	o.Branch = plumbing.ReferenceName(name)
-	o.Create = create
+	o.Create = false
+
+	if err = w.Checkout(o); err != nil {
+		return fmt.Errorf("Unable to create a new branch: %s", err)
+	}
+
+	return nil
+}
+
+// CreateBranch Creates a new branch based on an existing branch
+func (r *Repository) CreateBranch(origin string, new string) error {
+	origin = fmt.Sprintf("refs/heads/%s", origin)
+	new = fmt.Sprintf("refs/heads/%s", new)
+
+	w, err := r.root.Worktree()
+	if err != nil {
+		return fmt.Errorf("Unable to load the work tree: %s", err)
+	}
+
+	ref, err := r.root.Reference(plumbing.ReferenceName(origin), false)
+	if err != nil {
+		return err
+	}
+
+	o := &git.CheckoutOptions{}
+	o.Branch = plumbing.ReferenceName(new)
+	o.Create = true
+	o.Hash = ref.Hash()
 
 	if err = w.Checkout(o); err != nil {
 		return fmt.Errorf("Unable to create a new branch: %s", err)
@@ -129,11 +154,6 @@ func (r *Repository) CreateOrphanBranch(u *User, s string) error {
 	}
 
 	o := &git.CheckoutOptions{}
-
-	if err = o.Validate(); err != nil {
-		return err
-	}
-
 	o.Branch = plumbing.ReferenceName(name)
 	o.Create = true
 
@@ -229,6 +249,7 @@ func (r *Repository) CommitFile(u *User, filename string, msg string) error {
 			Email: u.Email,
 			When:  time.Now(),
 		},
+		All: true,
 	})
 
 	if err != nil {
@@ -240,7 +261,6 @@ func (r *Repository) CommitFile(u *User, filename string, msg string) error {
 
 // Commit makes a commit
 func (r *Repository) Commit(u *User, filename string, msg string) error {
-
 	w, err := r.root.Worktree()
 	if err != nil {
 		return fmt.Errorf("Unable to load the work tree: %s", err)
@@ -265,7 +285,6 @@ func (r *Repository) Commit(u *User, filename string, msg string) error {
 
 // ListBranches creates a list of all branches
 func (r *Repository) ListBranches() []string {
-
 	var b []string
 
 	refs, _ := r.root.References()
@@ -308,6 +327,7 @@ func (r *Repository) RemoveBranch(n string) error {
 	return nil
 }
 
+// TagExists checks if a certain tag reference exists
 func (r *Repository) TagExists(n string) bool {
 	b := false
 	refs, _ := r.root.References()
