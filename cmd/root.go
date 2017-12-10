@@ -48,6 +48,7 @@ func init() {
 	rootCmd.AddCommand(NewListCmd().Cmd())
 	rootCmd.AddCommand(NewRmCmd().Cmd())
 	rootCmd.AddCommand(NewMvCmd().Cmd())
+	rootCmd.AddCommand(NewCpCmd().Cmd())
 }
 
 // Execute the cobra commands

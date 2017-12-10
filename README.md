@@ -20,7 +20,7 @@ Commands under development:
 - [x] list
 - [x] rm
 - [x] mv
-- [ ] cp
+- [x] cp
 - [ ] edit
 - [ ] generate
 - [ ] grep
