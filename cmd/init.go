@@ -78,7 +78,7 @@ func (c *InitCmd) Execute(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := k.Keyring(3); err != nil {
-		return fmt.Errorf("[exit] only 3 passphrase attempts allowed")
+		return fmt.Errorf("only 3 passphrase attempts allowed: %s", err)
 	}
 
 	Cfg.User = u
