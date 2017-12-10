@@ -2,7 +2,7 @@
 
 gpass is an encrypted account manager built on top of git. 
 
-gpass creates a branch for each of the accounts you add, allowing you to have version control over your information such as passwords.
+gpass creates a branch for each of the accounts you add, allowing you to have version control over your encrypted information such as passwords.
 
 Commands under development: 
 

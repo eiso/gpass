@@ -79,6 +79,7 @@ func (c *MvCmd) Execute(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	//TODO: fix this for single folder moves, currently deletes the path
 	if err := utils.DeletePath(root); err != nil {
 		return err
 	}
