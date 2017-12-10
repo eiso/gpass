@@ -19,7 +19,7 @@ Commands under development:
 - [x] show
 - [x] list
 - [x] rm
-- [ ] mv
+- [x] mv
 - [ ] cp
 - [ ] edit
 - [ ] generate
