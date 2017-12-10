@@ -97,8 +97,8 @@ func (r *Repository) Load() error {
 	return nil
 }
 
-// Branch creates/switches to a new branch
-func (r *Repository) Branch(s string, create bool) error {
+// SwitchBranch switches to a new branch
+func (r *Repository) SwitchBranch(s string) error {
 	name := fmt.Sprintf("refs/heads/%s", s)
 
 	w, err := r.root.Worktree()
@@ -108,7 +108,7 @@ func (r *Repository) Branch(s string, create bool) error {
 
 	o := &git.CheckoutOptions{}
 	o.Branch = plumbing.ReferenceName(name)
-	o.Create = create
+	o.Create = false
 
 	if err = w.Checkout(o); err != nil {
 		return fmt.Errorf("Unable to create a new branch: %s", err)
@@ -118,7 +118,7 @@ func (r *Repository) Branch(s string, create bool) error {
 }
 
 // CreateBranch Creates a new branch based on an existing branch
-func (r *Repository) CreateBranch(origin string, new string, create bool) error {
+func (r *Repository) CreateBranch(origin string, new string) error {
 	origin = fmt.Sprintf("refs/heads/%s", origin)
 	new = fmt.Sprintf("refs/heads/%s", new)
 
@@ -127,18 +127,15 @@ func (r *Repository) CreateBranch(origin string, new string, create bool) error 
 		return fmt.Errorf("Unable to load the work tree: %s", err)
 	}
 
+	ref, err := r.root.Reference(plumbing.ReferenceName(origin), false)
+	if err != nil {
+		return err
+	}
+
 	o := &git.CheckoutOptions{}
 	o.Branch = plumbing.ReferenceName(new)
-	o.Create = create
-
-	if create {
-		ref, err := r.root.Reference(plumbing.ReferenceName(origin), false)
-		if err != nil {
-			return err
-		}
-
-		o.Hash = ref.Hash()
-	}
+	o.Create = true
+	o.Hash = ref.Hash()
 
 	if err = w.Checkout(o); err != nil {
 		return fmt.Errorf("Unable to create a new branch: %s", err)

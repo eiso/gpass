@@ -56,7 +56,7 @@ func (c *ShowCmd) Execute(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("the account does not exist")
 	}
 
-	if err := r.Branch(filename, false); err != nil {
+	if err := r.SwitchBranch(filename); err != nil {
 		return err
 	}
 

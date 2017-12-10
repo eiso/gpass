@@ -59,7 +59,7 @@ func (c *RmCmd) Execute(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	if err := r.Branch(filename, false); err != nil {
+	if err := r.SwitchBranch(filename); err != nil {
 		return err
 	}
 
@@ -78,10 +78,6 @@ func (c *RmCmd) Execute(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := r.RemoveBranch(filename); err != nil {
-		return err
-	}
-
-	if err := r.Branch("gpass", false); err != nil {
 		return err
 	}
 

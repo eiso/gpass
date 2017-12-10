@@ -67,7 +67,7 @@ func (c *MvCmd) Execute(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%s already exists", args[1])
 	}
 
-	if err := r.CreateBranch(filename, new, true); err != nil {
+	if err := r.CreateBranch(filename, new); err != nil {
 		return err
 	}
 
@@ -85,10 +85,6 @@ func (c *MvCmd) Execute(cmd *cobra.Command, args []string) error {
 
 	msg := fmt.Sprintf("Moved: %s to %s", args[0], args[1])
 	if err := r.CommitFile(Cfg.User, new, msg); err != nil {
-		return err
-	}
-
-	if err := r.Branch("gpass", false); err != nil {
 		return err
 	}
 
