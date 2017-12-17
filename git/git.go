@@ -100,26 +100,6 @@ func (r *Repository) Load() error {
 	return nil
 }
 
-// SwitchBranch switches to an existing branch or returns an error
-func (r *Repository) SwitchBranch(s string) error {
-	name := fmt.Sprintf("refs/heads/%s", s)
-
-	w, err := r.root.Worktree()
-	if err != nil {
-		return fmt.Errorf("Unable to load the work tree: %s", err)
-	}
-
-	o := &git.CheckoutOptions{}
-	o.Branch = plumbing.ReferenceName(name)
-	o.Create = false
-
-	if err = w.Checkout(o); err != nil {
-		return fmt.Errorf("Unable to create a new branch: %s", err)
-	}
-
-	return nil
-}
-
 // CreateBranch creates a new branch based on an existing branch or returns an error
 func (r *Repository) CreateBranch(origin string, new string) error {
 	origin = fmt.Sprintf("refs/heads/%s", origin)
@@ -182,15 +162,9 @@ func (r *Repository) CreateOrphanBranch(u *User, s string) error {
 	return nil
 }
 
-// TagBranch creates/switches to a branch based on a tag name or returns an error
-func (r *Repository) TagBranch(s string, create bool) error {
-	tag := fmt.Sprintf("refs/tags/%s", s)
+// SwitchBranch switches to an existing branch or returns an error
+func (r *Repository) SwitchBranch(s string) error {
 	name := fmt.Sprintf("refs/heads/%s", s)
-
-	ref, err := r.root.Reference(plumbing.ReferenceName(tag), false)
-	if err != nil {
-		return err
-	}
 
 	w, err := r.root.Worktree()
 	if err != nil {
@@ -198,10 +172,8 @@ func (r *Repository) TagBranch(s string, create bool) error {
 	}
 
 	o := &git.CheckoutOptions{}
-
-	o.Hash = ref.Hash()
 	o.Branch = plumbing.ReferenceName(name)
-	o.Create = create
+	o.Create = false
 
 	if err = w.Checkout(o); err != nil {
 		return fmt.Errorf("Unable to create a new branch: %s", err)
@@ -228,6 +200,34 @@ func (r *Repository) AddTagBranch(tag string, s string) error {
 
 	if err := r.root.Storer.SetReference(tr); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// TagBranch creates/switches to a branch based on a tag name or returns an error
+func (r *Repository) TagBranch(s string, create bool) error {
+	tag := fmt.Sprintf("refs/tags/%s", s)
+	name := fmt.Sprintf("refs/heads/%s", s)
+
+	ref, err := r.root.Reference(plumbing.ReferenceName(tag), false)
+	if err != nil {
+		return err
+	}
+
+	w, err := r.root.Worktree()
+	if err != nil {
+		return fmt.Errorf("Unable to load the work tree: %s", err)
+	}
+
+	o := &git.CheckoutOptions{}
+
+	o.Hash = ref.Hash()
+	o.Branch = plumbing.ReferenceName(name)
+	o.Create = create
+
+	if err = w.Checkout(o); err != nil {
+		return fmt.Errorf("Unable to create a new branch: %s", err)
 	}
 
 	return nil
