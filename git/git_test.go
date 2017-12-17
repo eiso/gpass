@@ -51,26 +51,34 @@ func (s *GitSuite) TestCreateOrphanBranch() {
 	defer os.RemoveAll(fs.Path)
 
 	dotgit := filepath.Join(fs.Path, ".git")
+	n := "testbranch"
+	ref := fmt.Sprintf("refs/heads/%s", n)
 
+	// gpass case:
 	err := gpass.Load()
+	require.NoError(s.T(), err)
+
+	err = gpass.CreateOrphanBranch(s.user, n)
 	require.NoError(s.T(), err)
 
 	err = fs.Load()
 	require.NoError(s.T(), err)
 
-	n := "testbranch"
-	err = gpass.CreateOrphanBranch(s.user, n)
-	require.NoError(s.T(), err)
-
+	// git case:
 	gitExec(s, dotgit, fs.Path, "checkout", "--orphan", n)
 
-	gpassRef, err := gpass.root.Reference(plumbing.ReferenceName(n), false)
+	err = ioutil.WriteFile(filepath.Join(fs.Path, ".empty"), []byte(""), 0600)
 	require.NoError(s.T(), err)
 
-	testRef, err := fs.root.Reference(plumbing.ReferenceName(n), false)
+	gitExec(s, dotgit, fs.Path, "add", ".")
+	gitExec(s, dotgit, fs.Path, "commit", "-m", "creating branch for "+n)
+
+	// verify both git & gpass case:
+	_, err = gpass.root.Reference(plumbing.ReferenceName(ref), false)
 	require.NoError(s.T(), err)
 
-	s.Equal(&gpassRef, &testRef)
+	_, err = fs.root.Reference(plumbing.ReferenceName(ref), false)
+	require.NoError(s.T(), err)
 }
 
 func gitExec(s *GitSuite, dir string, worktree string, command ...string) {

@@ -16,20 +16,23 @@ import (
 
 // Repository holds the repository meta data
 type Repository struct {
+	// Path is the full system path to the git repository
 	Path string
 	root *git.Repository
 }
 
 // User is the relevant user information
 type User struct {
-	Name       string
-	Email      string
+	// Name is the name in Git's global .config
+	Name string
+	// Email is the email in Git's global .config
+	Email string
+	// HomeFolder is the system's home folder
 	HomeFolder string
 }
 
 // Init populates the User type with information parsed from the system
 func (u *User) Init() error {
-
 	folder, err := homedir.Dir()
 	if err != nil {
 		return err
@@ -97,7 +100,7 @@ func (r *Repository) Load() error {
 	return nil
 }
 
-// SwitchBranch switches to a new branch
+// SwitchBranch switches to an existing branch or returns an error
 func (r *Repository) SwitchBranch(s string) error {
 	name := fmt.Sprintf("refs/heads/%s", s)
 
@@ -117,7 +120,7 @@ func (r *Repository) SwitchBranch(s string) error {
 	return nil
 }
 
-// CreateBranch Creates a new branch based on an existing branch
+// CreateBranch creates a new branch based on an existing branch or returns an error
 func (r *Repository) CreateBranch(origin string, new string) error {
 	origin = fmt.Sprintf("refs/heads/%s", origin)
 	new = fmt.Sprintf("refs/heads/%s", new)
@@ -144,7 +147,7 @@ func (r *Repository) CreateBranch(origin string, new string) error {
 	return nil
 }
 
-// CreateOrphanBranch creates an orphan branch
+// CreateOrphanBranch creates an orphan branch or returns an error
 func (r *Repository) CreateOrphanBranch(u *User, s string) error {
 	name := fmt.Sprintf("refs/heads/%s", s)
 
@@ -179,7 +182,7 @@ func (r *Repository) CreateOrphanBranch(u *User, s string) error {
 	return nil
 }
 
-// TagBranch creates/switches to a branch based on a tag name
+// TagBranch creates/switches to a branch based on a tag name or returns an error
 func (r *Repository) TagBranch(s string, create bool) error {
 	tag := fmt.Sprintf("refs/tags/%s", s)
 	name := fmt.Sprintf("refs/heads/%s", s)
@@ -207,7 +210,7 @@ func (r *Repository) TagBranch(s string, create bool) error {
 	return nil
 }
 
-//AddTagBranch adds a tag to a branch
+// AddTagBranch adds a tag to a branch or returns an error
 func (r *Repository) AddTagBranch(tag string, s string) error {
 	name := fmt.Sprintf("refs/heads/%s", s)
 
@@ -230,7 +233,7 @@ func (r *Repository) AddTagBranch(tag string, s string) error {
 	return nil
 }
 
-// CommitFile adds the file & commits it
+// CommitFile adds the file & commits it or returns an error
 func (r *Repository) CommitFile(u *User, filename string, msg string) error {
 
 	w, err := r.root.Worktree()
@@ -259,7 +262,7 @@ func (r *Repository) CommitFile(u *User, filename string, msg string) error {
 	return nil
 }
 
-// Commit makes a commit
+// Commit makes a commit or returns an error
 func (r *Repository) Commit(u *User, filename string, msg string) error {
 	w, err := r.root.Worktree()
 	if err != nil {
@@ -283,7 +286,7 @@ func (r *Repository) Commit(u *User, filename string, msg string) error {
 
 }
 
-// ListBranches creates a list of all branches
+// ListBranches returns a list of all branches on the repository
 func (r *Repository) ListBranches() []string {
 	var b []string
 
@@ -301,7 +304,7 @@ func (r *Repository) ListBranches() []string {
 
 }
 
-// BranchExists checks if a branch exists based on its name
+// BranchExists returns true if a branch exists based on its name or false if it doesn't
 func (r *Repository) BranchExists(n string) bool {
 	b := false
 	refs, _ := r.root.References()
@@ -317,7 +320,7 @@ func (r *Repository) BranchExists(n string) bool {
 	return b
 }
 
-// RemoveBranch deletes a branch based on its name
+// RemoveBranch deletes a branch based on its name or returns an error
 func (r *Repository) RemoveBranch(n string) error {
 	err := r.root.Storer.RemoveReference(plumbing.ReferenceName("refs/heads/" + n))
 	if err != nil {
@@ -327,7 +330,7 @@ func (r *Repository) RemoveBranch(n string) error {
 	return nil
 }
 
-// TagExists checks if a certain tag reference exists
+// TagExists returns true if a tag reference exists or false if it doesn't
 func (r *Repository) TagExists(n string) bool {
 	b := false
 	refs, _ := r.root.References()
