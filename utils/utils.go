@@ -57,7 +57,7 @@ func DeleteEmptyFolders(dir string) error {
 		if info.IsDir() && info.Name() == ".git" {
 			return filepath.SkipDir
 		}
-		
+
 		//log.Printf("\n------\ndir: %s\nfpath: %s", dir, fpath)
 		
 		if dir == fpath {
@@ -100,7 +100,7 @@ func DeleteEmptyFolders(dir string) error {
 		} else {
 			return nil
 		}
-		
+
 		return nil
 	})
 
