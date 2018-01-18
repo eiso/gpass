@@ -162,8 +162,8 @@ func (r *Repository) CreateOrphanBranch(u *User, s string) error {
 	return nil
 }
 
-// SwitchBranch switches to an existing branch or returns an error
-func (r *Repository) SwitchBranch(s string) error {
+// CheckoutBranch switches to an existing branch or returns an error
+func (r *Repository) CheckoutBranch(s string) error {
 	name := fmt.Sprintf("refs/heads/%s", s)
 
 	w, err := r.root.Worktree()
@@ -176,7 +176,7 @@ func (r *Repository) SwitchBranch(s string) error {
 	o.Create = false
 
 	if err = w.Checkout(o); err != nil {
-		return fmt.Errorf("Unable to create a new branch: %s", err)
+		return fmt.Errorf("Unable to checkout branch: %s", err)
 	}
 
 	return nil
@@ -286,7 +286,7 @@ func (r *Repository) Commit(u *User, filename string, msg string) error {
 
 }
 
-// ListBranches returns a list of all branches on the repository
+// ListBranches returns a list of all branches in the repository
 func (r *Repository) ListBranches() []string {
 	var b []string
 

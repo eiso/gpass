@@ -63,7 +63,7 @@ func (c *InsertCmd) Execute(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := r.SwitchBranch("gpass"); err != nil {
+	if err := r.CheckoutBranch("gpass"); err != nil {
 		return err
 	}
 

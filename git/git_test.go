@@ -36,46 +36,32 @@ func (s *GitSuite) newUser() *User {
 		HomeFolder: "/home/john-doe/"}
 }
 
-func (s *GitSuite) newRepository(name string) *Repository {
+// newTestRepository creates a git repository using the systems `git` used for testing 
+func (s *GitSuite) newTestRepository(name string) *Repository {
 	dir, err := ioutil.TempDir("", name)
 	require.NoError(s.T(), err)
 
 	dotgit := filepath.Join(dir, ".git")
 
 	gitExec(s, dotgit, dir, "init")
-
-	return &Repository{Path: dir}
-}
-
-func (s *GitSuite) TestCreateBranch() {
-	gpass := s.newRepository("gpass-test")
-	defer os.RemoveAll(gpass.Path)
-	fs := s.newRepository("git-test")
-	defer os.RemoveAll(fs.Path)
-
-	dotgit := filepath.Join(fs.Path, ".git")
-	origin := "master"
-	n := "testbranch"
-	ref1 := fmt.Sprintf("refs/heads/%s", origin)
-	ref2 := fmt.Sprintf("refs/heads/%s", n)
-
-	// gpass case:
-	//   create an origin branch so we can test a checkout
-	//   based on an exiting branch
-	err := gpass.Load()
+	
+	repo := &Repository{Path: dir}
+	
+	// create an master branch with a single file and a single commit
+	err = repo.Load()
 	require.NoError(s.T(), err)
 
-	w, err := gpass.root.Worktree()
+	w, err := repo.root.Worktree()
 	require.NoError(s.T(), err)
 
 	o := &git.CheckoutOptions{}
-	o.Branch = plumbing.ReferenceName(ref1)
+	o.Branch = plumbing.ReferenceName("refs/heads/master")
 	o.Create = true
 
 	err = w.Checkout(o)
 	require.NoError(s.T(), err)
 
-	err = ioutil.WriteFile(filepath.Join(gpass.Path, ".empty"), []byte(""), 0600)
+	err = ioutil.WriteFile(filepath.Join(repo.Path, ".empty"), []byte(""), 0600)
 	require.NoError(s.T(), err)
 
 	_, err = w.Add(".empty")
@@ -90,69 +76,47 @@ func (s *GitSuite) TestCreateBranch() {
 	})
 	require.NoError(s.T(), err)
 
-	//   create a new branch based on origin
-	gpass.CreateBranch(origin, n)
-	require.NoError(s.T(), err)
-
-	// git case:
-	err = fs.Load()
-	require.NoError(s.T(), err)
-
-	gitExec(s, dotgit, fs.Path, "checkout", "-b", origin)
-
-	err = ioutil.WriteFile(filepath.Join(fs.Path, ".empty"), []byte(""), 0600)
-	require.NoError(s.T(), err)
-
-	gitExec(s, dotgit, fs.Path, "add", ".")
-	gitExec(s, dotgit, fs.Path, "commit", "-m", "add .empty")
-
-	gitExec(s, dotgit, fs.Path, "checkout", "-b", n, origin)
-
-	// verify both git & gpass case
-	gpassRef, err := gpass.root.Head()
-	gitRef, err := gpass.root.Head()
-
-	s.Equal(string(gpassRef.Name()), ref2)
-	s.Equal(string(gitRef.Name()), ref2)
+	return repo
 }
 
-func (s *GitSuite) TestCreateOrphanBranch() {
-	gpass := s.newRepository("gpass-test")
+func (s *GitSuite) TestCreateBranch() {
+	gpass := s.newTestRepository("gpass-test")
 	defer os.RemoveAll(gpass.Path)
-	fs := s.newRepository("git-test")
-	defer os.RemoveAll(fs.Path)
 
-	dotgit := filepath.Join(fs.Path, ".git")
+	master := "master"
 	n := "testbranch"
 	ref := fmt.Sprintf("refs/heads/%s", n)
 
-	// gpass case:
+	err := gpass.Load()
+	require.NoError(s.T(), err)
+	
+	err = gpass.CreateBranch(master, n)
+	require.NoError(s.T(), err)
+
+	gpassRef, err := gpass.root.Head()
+
+	s.Equal(string(gpassRef.Name()), ref)
+}
+
+func (s *GitSuite) TestCreateOrphanBranch() {
+	gpass := s.newTestRepository("gpass-test")
+	defer os.RemoveAll(gpass.Path)
+
+	n := "orphanbranch"
+	ref := fmt.Sprintf("refs/heads/%s", n)
+
 	err := gpass.Load()
 	require.NoError(s.T(), err)
 
 	err = gpass.CreateOrphanBranch(s.user, n)
 	require.NoError(s.T(), err)
 
-	// git case:
-	err = fs.Load()
-	require.NoError(s.T(), err)
-
-	gitExec(s, dotgit, fs.Path, "checkout", "--orphan", n)
-
-	err = ioutil.WriteFile(filepath.Join(fs.Path, ".empty"), []byte(""), 0600)
-	require.NoError(s.T(), err)
-
-	gitExec(s, dotgit, fs.Path, "add", ".")
-	gitExec(s, dotgit, fs.Path, "commit", "-m", "creating branch for "+n)
-
-	// verify both git & gpass case:
 	_, err = gpass.root.Reference(plumbing.ReferenceName(ref), false)
-	require.NoError(s.T(), err)
-
-	_, err = fs.root.Reference(plumbing.ReferenceName(ref), false)
 	require.NoError(s.T(), err)
 }
 
+// TODO: should be removed once creating git repositories with go-git is added to this package
+// creates an unnecessary dependency for `git` to exist on the system
 func gitExec(s *GitSuite, dir string, worktree string, command ...string) {
 	cmd := exec.Command("git",
 		append([]string{"--git-dir", dir, "--work-tree", worktree},
