@@ -47,7 +47,7 @@ func (s *GitSuite) newTestRepository(name string) *Repository {
 	
 	repo := &Repository{Path: dir}
 	
-	// create an master branch with a single file and a single commit
+	// create a master branch with a single file and a single commit
 	err = repo.Load()
 	require.NoError(s.T(), err)
 
@@ -61,13 +61,13 @@ func (s *GitSuite) newTestRepository(name string) *Repository {
 	err = w.Checkout(o)
 	require.NoError(s.T(), err)
 
-	err = ioutil.WriteFile(filepath.Join(repo.Path, ".empty"), []byte(""), 0600)
+	err = ioutil.WriteFile(filepath.Join(repo.Path, "empty"), []byte(""), 0600)
 	require.NoError(s.T(), err)
 
-	_, err = w.Add(".empty")
+	_, err = w.Add("empty")
 	require.NoError(s.T(), err)
 
-	_, err = w.Commit("add .empty", &git.CommitOptions{
+	_, err = w.Commit("add empty", &git.CommitOptions{
 		Author: &object.Signature{
 			Name:  s.user.Name,
 			Email: s.user.Email,
@@ -76,6 +76,41 @@ func (s *GitSuite) newTestRepository(name string) *Repository {
 	})
 	require.NoError(s.T(), err)
 
+	// create an second branch named `test` based on `master` 
+	// adding a second file and commit
+	w, err = repo.root.Worktree()
+	require.NoError(s.T(), err)
+
+	o = &git.CheckoutOptions{}
+	o.Branch = plumbing.ReferenceName("refs/heads/test")
+	o.Create = true
+
+	err = w.Checkout(o)
+	require.NoError(s.T(), err)
+
+	err = ioutil.WriteFile(filepath.Join(repo.Path, "empty2"), []byte(""), 0600)
+	require.NoError(s.T(), err)
+
+	_, err = w.Add("empty2")
+	require.NoError(s.T(), err)
+
+	_, err = w.Commit("add empty2", &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  s.user.Name,
+			Email: s.user.Email,
+			When:  time.Now(),
+		},
+	})
+	require.NoError(s.T(), err)
+
+	// checkout master
+	o = &git.CheckoutOptions{}
+	o.Branch = plumbing.ReferenceName("refs/heads/master")
+	o.Create = false
+
+	err = w.Checkout(o)
+	require.NoError(s.T(), err)
+	
 	return repo
 }
 
@@ -114,6 +149,29 @@ func (s *GitSuite) TestCreateOrphanBranch() {
 	_, err = gpass.root.Reference(plumbing.ReferenceName(ref), false)
 	require.NoError(s.T(), err)
 }
+
+func (s *GitSuite) TestCheckoutBranch() {
+	gpass := s.newTestRepository("gpass-test")
+	defer os.RemoveAll(gpass.Path)
+
+	n := "test"
+	ref := fmt.Sprintf("refs/heads/%s", n)
+
+	err := gpass.Load()
+	require.NoError(s.T(), err)
+
+	err = gpass.CheckoutBranch(n)
+	require.NoError(s.T(), err)
+
+	gpassRef, err := gpass.root.Reference(plumbing.ReferenceName(ref), false)
+	require.NoError(s.T(), err)
+
+	headRef, err := gpass.root.Head()
+	require.NoError(s.T(), err)
+
+	s.Equal(gpassRef, headRef)	
+}
+
 
 // TODO: should be removed once creating git repositories with go-git is added to this package
 // creates an unnecessary dependency for `git` to exist on the system
