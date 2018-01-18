@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"os"
+//	"os"
 	"path"
-	"strings"
+//	"strings"
 
 	"github.com/eiso/gpass/utils"
 	"github.com/spf13/cobra"
@@ -27,7 +27,7 @@ func (c *MvCmd) Cmd() *cobra.Command {
 }
 
 // TODO:
-// Debug case:
+// Debug git history case:
 // 1. insert p1
 // 2. mv p1 p2
 // 3. rm p2
@@ -50,8 +50,8 @@ func (c *MvCmd) Execute(cmd *cobra.Command, args []string) error {
 	new := args[1] + ".gpg"
 	pathPrev := path.Join(r.Path, filename)
 	pathNew := path.Join(r.Path, new)
-	d := strings.Split(filename, string(os.PathSeparator))
-	root := path.Join(r.Path, d[0])
+	//d := strings.Split(filename, string(os.PathSeparator))
+	//root := path.Join(r.Path, d[0])
 
 	if err := r.Load(); err != nil {
 		return err
@@ -81,8 +81,7 @@ func (c *MvCmd) Execute(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	//TODO: fix this for single folder moves, currently deletes the path
-	if err := utils.DeletePath(root); err != nil {
+	if err := utils.DeleteEmptyFolders(r.Path); err != nil {
 		return err
 	}
 
