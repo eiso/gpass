@@ -53,6 +53,11 @@ func (c *ListCmd) Execute(cmd *cobra.Command, args []string) error {
 		}
 
 		branch = branch[:len(branch)-4]
+
+		if len(args) > 0 && !strings.HasPrefix(branch, args[0]){
+			continue
+		}
+
 		parts := strings.Split(branch, string(os.PathSeparator))
 
 		t := tree.FindByValue(parts[0])
