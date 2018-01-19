@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"syscall"
 
@@ -36,6 +37,73 @@ func TouchFile(filename string) error {
 // DeletePath removes everything in a path (incl. dirs)
 func DeletePath(path string) error {
 	err := os.RemoveAll(path)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteEmptyFolders recursively removes all empty folders in a path
+func DeleteEmptyFolders(dir string) error {
+
+	dir = filepath.Clean(dir)
+
+	err := filepath.Walk(dir, func(fpath string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+
+		if info.IsDir() && info.Name() == ".git" {
+			return filepath.SkipDir
+		}
+
+		//log.Printf("\n------\ndir: %s\nfpath: %s", dir, fpath)
+		
+		if dir == fpath {
+			return nil
+		}
+
+		if info.IsDir() {
+			fd, err := os.Open(fpath)	
+			if err != nil {
+				return err
+			}
+
+			names, err := fd.Readdirnames(100)
+
+			if len(names) < 1 {
+				//log.Printf("\nDeleting: %s\n", fpath)
+				err = os.RemoveAll(fpath)
+				if err != nil {
+					return err
+				}
+			}
+
+			log.Printf("\nDirnames: %s", names)
+			for _, name := range names {	
+				//log.Printf("\nFolder content:%s\n", fpath + string(os.PathSeparator) + name)		
+				f, err := os.Stat(fpath + string(os.PathSeparator) + name)	
+				if err != nil {
+					return err
+				}
+				
+				if !f.IsDir() {
+					log.Printf("YOOOO")
+					fd.Close()
+					return nil				
+				}
+			}
+
+			fd.Close()
+			DeleteEmptyFolders(fpath)
+		} else {
+			return nil
+		}
+
+		return nil
+	})
+
 	if err != nil {
 		return err
 	}
