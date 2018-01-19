@@ -2,9 +2,7 @@ package cmd
 
 import (
 	"fmt"
-//	"os"
 	"path"
-//	"strings"
 
 	"github.com/eiso/gpass/utils"
 	"github.com/spf13/cobra"
@@ -45,13 +43,10 @@ func (c *MvCmd) Execute(cmd *cobra.Command, args []string) error {
 
 	r := Cfg.Repository
 
-	// TODO: write a path building function; this is ugly and repeated everywhere
 	filename := args[0] + ".gpg"
 	new := args[1] + ".gpg"
 	pathPrev := path.Join(r.Path, filename)
 	pathNew := path.Join(r.Path, new)
-	//d := strings.Split(filename, string(os.PathSeparator))
-	//root := path.Join(r.Path, d[0])
 
 	if err := r.Load(); err != nil {
 		return err

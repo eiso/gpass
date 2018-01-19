@@ -23,6 +23,7 @@ Commands under development:
 - [x] cp
 - [ ] edit
 - [ ] generate
+- [ ] search
 - [ ] grep
 
 
