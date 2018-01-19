@@ -59,7 +59,7 @@ func (c *RmCmd) Execute(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	if err := r.SwitchBranch(filename); err != nil {
+	if err := r.CheckoutBranch(filename); err != nil {
 		return err
 	}
 

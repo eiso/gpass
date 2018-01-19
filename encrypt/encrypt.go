@@ -113,22 +113,31 @@ func (f *PGP) WriteFile(repoPath string, filename string) error {
 //Keyring builds a pgp keyring based upon the users' private key
 func (f *PGP) Keyring(attempts int) error {
 	entity := entityList[0]
+	success := false
 
 	passphraseByte := shellPrompt()
 
 	if entity.PrivateKey != nil && entity.PrivateKey.Encrypted {
 		err := entity.PrivateKey.Decrypt(passphraseByte)
-		if err != nil {
-			if attempts > 1 {
-				fmt.Println("Sorry, try again.")
-				f.Keyring(attempts - 1)
-			}
-			return fmt.Errorf("Failed to decrypt main private key: %s", err)
+		if err == nil {
+			success = true
 		}
 	}
 
 	for _, subkey := range entity.Subkeys {
-		subkey.PrivateKey.Decrypt(passphraseByte)
+		err := subkey.PrivateKey.Decrypt(passphraseByte)
+		if err == nil {
+			success = true
+		}
+	}
+
+	if !success && attempts > 1 {
+		fmt.Println("Sorry, try again.")
+		return f.Keyring(attempts - 1)
+	}
+
+	if !success {
+		return fmt.Errorf("failed to decrypt private key")
 	}
 
 	entityList = append(entityList, entity)

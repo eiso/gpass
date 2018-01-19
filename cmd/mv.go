@@ -44,6 +44,8 @@ func (c *MvCmd) Execute(cmd *cobra.Command, args []string) error {
 	}
 
 	r := Cfg.Repository
+
+	// TODO: write a path building function; this is ugly and repeated everywhere
 	filename := args[0] + ".gpg"
 	new := args[1] + ".gpg"
 	pathPrev := path.Join(r.Path, filename)
@@ -79,6 +81,7 @@ func (c *MvCmd) Execute(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	//TODO: fix this for single folder moves, currently deletes the path
 	if err := utils.DeletePath(root); err != nil {
 		return err
 	}
